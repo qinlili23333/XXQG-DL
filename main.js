@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -10,6 +10,7 @@
 // @grant        none
 // @run-at        document-idle
 // ==/UserScript==
+
 
 (async function() {
     'use strict';
@@ -31,6 +32,20 @@
             dlPannel.appendChild(dlText);
             var first=document.body.firstChild;
             document.body.insertBefore(dlPannel,first);
+            //初始化进度条
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = "https://cdn.jsdelivr.net/gh/qinlili23333/SakiProgress@1.0.3/SakiProgress.min.js";
+            script.onload=function(){
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = "https://cdn.jsdelivr.net/gh/qinlili23333/WebXHRDL@0.1.0/WebXHRDL.min.js";
+                script.onload=function(){
+                    XHRDL.init();
+                }
+                document.body.appendChild(script);
+            }
+            document.body.appendChild(script);
             //检测爬取页面类型
             console.log("Detecting Page "+document.location.pathname+"-Qinlili");
             var detected=false;
@@ -133,7 +148,7 @@
                 console.log("Fail Get Video Info:"+infourl+"\n-Qinlili")
             }
         }
-        xhr.open('GET',infourl);
+        xhr.open('GET',infourl,false);
         xhr.send();
 
         //平整化Array工具，从学习强国本身的js里抄过来的，看不懂原理但是能跑就完事了
@@ -266,17 +281,6 @@
     }
     //下载
     function downloadFile(url,name){
-        console.log("Downloader Start\nUrl:"+url+"\nName:"+name+"\nQinlili JS Fetch");
-        fetch(url).then(res => res.blob().then(blob => {
-            console.log("Download Finish:"+name+"\nQinlili JS Fetch")
-            var a = document.createElement('a');
-            var url = window.URL.createObjectURL(blob);
-            var filename =name;
-            a.href = url;
-            a.download = filename;
-            a.click();
-            console.log("Writing File:"+name+"\nQinlili JS Fetch")
-            window.URL.revokeObjectURL(url);
-        }))
+        XHRDL.newTask(url,name);
     }
 })();
