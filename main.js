@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -408,7 +408,7 @@
                     }
                 }
                 //新慕课、影视总页
-                if(document.getElementsByClassName("video-article-content")[0]){
+                if(document.getElementsByClassName("video-article-content")[0]||document.getElementsByClassName("videoSet-article-wrap")[0]){
                     console.log("New Video Player Detected "+document.location.pathname+"-Qinlili");
                     detected=true;
                     dlText.innerText="页面类型:新视频总，支持全部批量下载最高清晰度，需要打开新标签页下载";
