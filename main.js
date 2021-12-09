@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
 // @match        *://boot-source.xuexi.cn/newmoocdown?*
+// @match        *://boot-source.xuexi.cn/audiodown?*
 // @icon         https://www.xuexi.cn/favicon.ico
 // @grant        none
 // @run-at        document-idle
@@ -365,6 +366,8 @@
             }
         }
     }
+
+
     //主站检测
     if(document.location.host=="www.xuexi.cn"){
         console.log("JS Loaded,Sleep 5 Sec-Qinlili");
@@ -417,6 +420,15 @@
                     }
                 }
             }
+            //音频
+            if(document.getElementsByClassName("album-play-btn")[0]){
+                console.log("Audio Detected "+document.location.pathname+"-Qinlili");
+                detected=true;
+                dlText.innerText="页面类型:音频，支持全部批量下载，需要打开新标签页下载";
+                downloadBtn.onclick=function(){
+                    AudioDL();
+                }
+            }
             if(!detected){
                 console.log("Unsupported Page "+document.location.pathname+"-Qinlili");
                 dlText.innerText="本页面不支持下载";
@@ -444,6 +456,12 @@
                 console.log("Open DL Page-Qinlili");
                 var searchParams = new URLSearchParams(document.location.search);
                 var dlurl="https://boot-source.xuexi.cn/newmoocdown?id="+searchParams.get("id");
+                window.open(dlurl, "_blank");
+            }
+            function AudioDL(){
+                console.log("Open DL Page-Qinlili");
+                var searchParams = new URLSearchParams(document.location.search);
+                var dlurl="https://boot-source.xuexi.cn/audiodown?id="+searchParams.get("id");
                 window.open(dlurl, "_blank");
             }
         }else{
@@ -542,47 +560,70 @@
         var xhr = new XMLHttpRequest();
         xhr.onload = event => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                logcat("Success Get Video Info:"+vid)
+                logcat("Success Get JSON Info:"+vid)
                 var videoInfo=JSON.parse(xhr.response.replace("callback(","").replace("})","}"));
                 console.log(videoInfo);
                 logcat("List Name:"+videoInfo.normalized_title)
                 logcat("List Origin:"+videoInfo.show_source)
                 //文件名后缀
                 var filenamesource="-"+videoInfo.normalized_title+"-"+videoInfo.show_source;
-                //检测是否为多视频
-                if(videoInfo.sub_items){
-                    logcat("Found "+videoInfo.sub_items.length+" Videos");
-                    //循环解析并下载视频
-                    for(var vi=0;videoInfo.sub_items[vi];vi++){
-                        logcat("Analysis Video "+ (vi+1));
-                        //currentVideo，缩写为cV看起来清爽点
-                        var cV=videoInfo.sub_items[vi];
-                        var vName=cV.title;
-                        logcat("Video Name:"+vName);
-                        //检测多个清晰度
-                        var vurl=getHighest(cV.videos[0].video_storage_info);
-                        logcat("Video Url:"+vurl);
-                        var fName=vName+filenamesource+".mp4";
-                        logcat("File Name:"+fName);
+                //视频下载模式
+                if(document.location.pathname=="/newmoocdown"){
+                    //检测是否为多视频
+                    if(videoInfo.sub_items){
+                        logcat("Found "+videoInfo.sub_items.length+" Videos");
+                        //循环解析并下载视频
+                        for(var vi=0;videoInfo.sub_items[vi];vi++){
+                            logcat("Analysis Video "+ (vi+1));
+                            //currentVideo，缩写为cV看起来清爽点
+                            var cV=videoInfo.sub_items[vi];
+                            var vName=cV.title;
+                            logcat("Video Name:"+vName);
+                            //检测多个清晰度
+                            var vurl=getHighest(cV.videos[0].video_storage_info);
+                            logcat("Video Url:"+vurl);
+                            var fName=vName+filenamesource+".mp4";
+                            logcat("File Name:"+fName);
+                            logcat("Call Downloader, Downloader Log Output In F12");
+                            downloadFile(vurl,fName);
+                        }
+                    }else{
+                        //单个视频
+                        var singlevurl=getHighest(videoInfo.videos[0].video_storage_info);
+                        logcat("Video Url:"+singlevurl);
+                        vName=videoInfo.title;
+                        var sfName=vName+filenamesource+".mp4";
+                        logcat("File Name:"+sfName);
                         logcat("Call Downloader, Downloader Log Output In F12");
-                        downloadFile(vurl,fName);
+                        downloadFile(singlevurl,sfName);
                     }
-                }else{
-                    //单个视频
-                    var singlevurl=getHighest(videoInfo.videos[0].video_storage_info);
-                    logcat("Video Url:"+singlevurl);
-                    vName=videoInfo.title;
-                    var sfName=vName+filenamesource+".mp4";
-                    logcat("File Name:"+sfName);
-                    logcat("Call Downloader, Downloader Log Output In F12");
-                    downloadFile(singlevurl,sfName);
                 }
-
-            }
-            xhr.onerror = function (e) {
-                logcat("Fail Get Video Info:"+vid)
+                //音频下载模式
+                if(document.location.pathname=="/audiodown"){
+                    if(videoInfo.sub_items){
+                        logcat("Found "+videoInfo.sub_items.length+" Audios");
+                        //循环解析并下载音频
+                        for(var ai=0;videoInfo.sub_items[ai];ai++){
+                            logcat("Analysis Video "+ (ai+1));
+                            //currentAudio，缩写为cA看起来清爽点
+                            var cA=videoInfo.sub_items[ai];
+                            var aName=cA.title;
+                            logcat("Audio Name:"+aName);
+                            //音频不区分清晰度
+                            var aurl=cA.audios[0].audio_storage_info[0].url;
+                            logcat("Audio Url:"+aurl);
+                            var afName=aName+filenamesource+".mp3";
+                            logcat("File Name:"+fName);
+                            logcat("Call Downloader, Downloader Log Output In F12");
+                            downloadFile(aurl,afName);
+                        }
+                    }
+                }
             }
         }
+        xhr.onerror = function (e) {
+                    logcat("Fail Get Json Info:"+vid)
+                }
         xhr.open('GET',"https://boot-source.xuexi.cn/data/app/"+vid+".js?callback=callback&_st="+Date.now());
         xhr.send();
         //打印日志方法，空页面就不用console.log了
@@ -625,4 +666,5 @@
     function downloadFile(url,name){
         XHRDL.newTask(url,name);
     }
-})();
+}
+ )();
