@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -420,13 +420,23 @@
                     }
                 }
             }
-            //音频
+            //音频专题
             if(document.getElementsByClassName("album-play-btn")[0]){
                 console.log("Audio Detected "+document.location.pathname+"-Qinlili");
                 detected=true;
                 dlText.innerText="页面类型:音频，支持全部批量下载，需要打开新标签页下载";
                 downloadBtn.onclick=function(){
                     AudioDL();
+                }
+            }
+            //页面上就一个音频
+            //解锁音频播放器下载按钮
+            if(document.getElementsByTagName("audio").length){
+                detected=true;
+                dlText.innerText="页面类型:单个音频，已经解锁播放器下载能力，点击播放器右侧菜单下载";
+                downloadBtn.style.display="none";
+                for(var la=0;document.getElementsByTagName("audio")[la];la++){
+                    document.getElementsByTagName("audio")[la].removeAttribute("controlslist");
                 }
             }
             if(!detected){
@@ -507,7 +517,7 @@
         xhr.open('GET',infourl,false);
         xhr.send();
 
-        //平整化Array工具，从学习强国本身的js里抄过来的，看不懂原理但是能跑就完事了
+        //平整化Array工具，从学习强国本身的js里抄过来的，大概原理就是尝试把值作为json解析，解析成功就把解析结果替换回去，总之我大受震撼
         function stringToObject(params) {
             for (var key in params) {
                 var value = params[key];
