@@ -1,20 +1,33 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.7
+// @version      0.8
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
 // @match        *://boot-source.xuexi.cn/newmoocdown?*
 // @match        *://boot-source.xuexi.cn/audiodown?*
+// @match        *://preview-pdf.xuexi.cn/*
 // @icon         https://www.xuexi.cn/favicon.ico
 // @grant        none
 // @run-at        document-idle
+// @require        https://cdn.jsdelivr.net/npm/jspdf@2.4.0/dist/jspdf.umd.min.js
+// @license        Anti996License
 // ==/UserScript==
 
 
 (async function() {
     'use strict';
+    //既然连喜欢的人都没能力留住，那还是把更多时间投入到写代码吧--记于与悦悦子分手的7天之后（2022.1.11）
+    //这些内容给本项目开发提供了帮助，感谢
+    //https://stackoverflow.com/a/60644673
+    //https://stackoverflow.com/a/55165133
+    //也感谢每一位相信琴梨梨的用户
+
+    //干掉PDF水印
+    if(document.location.host=="preview-pdf.xuexi.cn"){
+        CanvasRenderingContext2D.prototype.fillText=function(){}
+    }
     //共享库
     var SakiProgress = {
         isLoaded: false,
@@ -369,7 +382,7 @@
 
 
     //主站检测
-    if(document.location.host=="www.xuexi.cn"){
+    if(document.location.host=="www.xuexi.cn"||document.location.host=="preview-pdf.xuexi.cn"){
         console.log("JS Loaded,Sleep 5 Sec-Qinlili");
         const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
         await sleep(5000)
@@ -439,6 +452,14 @@
                     document.getElementsByTagName("audio")[la].removeAttribute("controlslist");
                 }
             }
+            //电子书下载
+            if(document.location.host=="preview-pdf.xuexi.cn"){
+                detected=true;
+                dlText.innerText="页面类型:电子书，支持打包下载";
+                downloadBtn.onclick=function(){
+                    PDFDL();
+                }
+            }
             if(!detected){
                 console.log("Unsupported Page "+document.location.pathname+"-Qinlili");
                 dlText.innerText="本页面不支持下载";
@@ -473,6 +494,109 @@
                 var searchParams = new URLSearchParams(document.location.search);
                 var dlurl="https://boot-source.xuexi.cn/audiodown?id="+searchParams.get("id");
                 window.open(dlurl, "_blank");
+            }
+            async function PDFDL(){
+                var compress=null;
+                var compressMode="FAST";
+                if(confirm("是否开启WEBP压缩？会延长生成时间但缩小文件大小")){
+                    compress="WEBP"
+                    if(confirm("是否使用深度压缩模式？会大幅延长生成时间但只能小幅缩小文件大小")){
+                        compressMode="SLOW"
+                    }
+                }
+                SakiProgress.showDiv();
+                SakiProgress.setText("正在加载依赖...");
+                await sleep(100)
+                console.log("Preparing jsPDF Library...-Qinlili");
+                var jsPDF=jspdf.jsPDF;
+                try{
+                    console.log(jsPDF)
+                    console.log("jsPDF Ready!")
+                }catch{
+                    console.error("jsPDF Not Ready!")
+                }
+                SakiProgress.setText("正在调整尺寸...");
+                SakiProgress.setPercent(2);
+                await sleep(100)
+                //放大到最大保障清晰度
+                for(;document.getElementsByClassName("ctrl-icon")[0].className.animVal.indexOf("disabled")<0;){
+                    document.getElementsByClassName("ctrl-icon")[0].parentElement.click()
+                }
+                SakiProgress.setText("正在回到第一页...");
+                SakiProgress.setPercent(4);
+                await sleep(100)
+                //回到第一页
+                for(;document.getElementsByClassName("ctrl-icon")[2].className.animVal.indexOf("disabled")<0;){
+                    document.getElementsByClassName("ctrl-icon")[2].parentElement.click()
+                }
+                //创建文件
+                SakiProgress.setText("正在创建文件...");
+                SakiProgress.setPercent(6);
+                await sleep(100)
+                var samplePage=document.getElementsByTagName("canvas")[0]
+                var ori;
+                let wP=samplePage.width;
+                let hP=samplePage.height;
+                if(wP>hP){ori="l"}else{ori="p"}
+                var  PDFfile=new jsPDF({
+                    orientation: ori,
+                    unit: 'px',
+                    format: [wP,hP],
+                    putOnlyUsedFonts:true,
+                });
+                console.log("Preparing PDF File...-Qinlili");
+                console.log(PDFfile);
+                //监听函数
+                SakiProgress.setText("正在设置监听函数...");
+                SakiProgress.setPercent(8);
+                await sleep(100)
+                var onPageChange=function(){};
+                var val=document.getElementsByTagName("input")[0];
+                function waitPageChange() {
+                    return new Promise(resolve => {
+                        onPageChange = function () {
+                            resolve();
+                        }
+                    });
+                }
+                Object.defineProperty(val, 'value', {
+                    set: function(newValue) {
+                        var valueProp = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                        valueProp.set.call(val, newValue);
+                        onPageChange();
+                    }
+                });
+                document.getElementsByClassName("ctrl-icon")[3].parentElement.addEventListener("click",function(e){
+                    console.log("Next Page Btn Clicked!-Qinlili");
+                })
+                console.log("Hook Value Set Success!-Qinlili");
+                //循环保存
+                var page=1;
+                var totalPage=parseInt(document.getElementsByClassName("total")[0].innerText.substr(1));
+                for(;document.getElementsByClassName("ctrl-icon")[3].className.animVal.indexOf("disabled")<0;){
+                    SakiProgress.setText("正在保存第"+page+"页...");
+                    SakiProgress.setPercent(10+80*(page/totalPage));
+                    console.log("Work Current Page:"+page+"...-Qinlili");
+                    await sleep(100)
+                    //不管有几页，把当前全部canvas保存再说
+                    for(var i=0;document.getElementsByTagName("canvas")[i];i++){
+                        PDFfile.addImage(document.getElementsByTagName("canvas")[i],compress,0,0,wP,hP,null,compressMode)
+                        PDFfile.addPage();
+                        page++
+                        console.log("Saved One Page!-Qinlili");
+                    }
+                    setTimeout(function(){document.getElementsByClassName("ctrl-icon")[3].parentElement.click();},500)
+                    SakiProgress.setText("正在等待加载第"+(page+1)+"页...");
+                    console.log("Waiting For Loading...-Qinlili");
+                    await waitPageChange();
+                }
+                //生成文件导出
+                SakiProgress.setText("正在导出文件...");
+                SakiProgress.setPercent(90);
+                PDFfile.save("学习强国电子书导出.pdf",{returnPromise:true}).then(finish => {
+                    SakiProgress.clearProgress;
+                    SakiProgress.hideDiv();
+                });
             }
         }else{
             console.log("Iframe Page "+document.location.pathname+"\nSkip Detect-Qinlili");
@@ -632,8 +756,8 @@
             }
         }
         xhr.onerror = function (e) {
-                    logcat("Fail Get Json Info:"+vid)
-                }
+            logcat("Fail Get Json Info:"+vid)
+        }
         xhr.open('GET',"https://boot-source.xuexi.cn/data/app/"+vid+".js?callback=callback&_st="+Date.now());
         xhr.send();
         //打印日志方法，空页面就不用console.log了
@@ -677,4 +801,4 @@
         XHRDL.newTask(url,name);
     }
 }
- )();
+)();
