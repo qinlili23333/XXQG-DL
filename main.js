@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.8.2
+// @version      0.8.3
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
 // @match        *://boot-source.xuexi.cn/newmoocdown?*
 // @match        *://boot-source.xuexi.cn/audiodown?*
 // @match        *://preview-pdf.xuexi.cn/*
+// @match        *://article.xuexi.cn/*
 // @icon         https://www.xuexi.cn/favicon.ico
 // @grant        none
 // @run-at        document-idle
@@ -24,6 +25,23 @@
     //https://stackoverflow.com/a/55165133
     //也感谢每一位相信琴梨梨的用户
 
+    //是否开启跨源服务器
+    //开启跨源服务器可以下载部分本来会出错的电子书
+    //请访问此地址获取跨源服务器https://github.com/Rob--W/cors-anywhere
+    //Clone到本地后运行npm install，然后运行node server.js，即可运行在默认地址和端口上
+    var corsServer="http://localhost:8080/";
+    if(document.location.host=="preview-pdf.xuexi.cn"&&(document.location.search.indexOf("boot-video.xuexi.cn")>1)&&confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。")){
+        var valueProp = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
+        Object.defineProperty(Image.prototype, 'src', {
+            set: function(newimgValue) {
+                if(newimgValue.indexOf("data:")==-1){
+                    newimgValue=corsServer+newimgValue;
+                }
+                this.crossOrigin="anonymous"
+                valueProp.set.call(this, newimgValue);
+            }
+        });
+    }
     //干掉日志
     (function(open) {
         XMLHttpRequest.prototype.open = function(method, url, async, user, pass) {
@@ -37,6 +55,7 @@
     //干掉PDF水印
     if(document.location.host=="preview-pdf.xuexi.cn"){
         CanvasRenderingContext2D.prototype.fillText=function(){}
+        document.domain = 'xuexi.cn';
     }
     //共享库
     var SakiProgress = {
@@ -391,10 +410,10 @@
     }
 
 
+    const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
     //主站检测
     if(document.location.host=="www.xuexi.cn"||document.location.host=="preview-pdf.xuexi.cn"){
         console.log("JS Loaded,Sleep 5 Sec-Qinlili");
-        const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
         await sleep(5000)
         if(window.self === window.top){
             //初始化下载工具条
@@ -687,6 +706,14 @@
             return Object.prototype.toString.call(o) === '[object Object]';
         }
     }
+
+    //跳转避免跨域问题
+    if(document.location.host=="article.xuexi.cn"){
+        console.log("JS Loaded,Sleep 5 Sec-Qinlili");
+        await sleep(5000)
+        document.location.href=document.getElementsByClassName("pdf-iframe")[0].src;
+    }
+
 
     //404注入页面避免cors
     if(document.location.host=="boot-source.xuexi.cn"){
