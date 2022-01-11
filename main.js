@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.8.1
+// @version      0.8.2
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -377,7 +377,7 @@
                     XHRDL.dlList.splice(0, 1);
                     XHRDL.DLEngine.checkNext();
                 }
-                xhr.open('GET', taskInfo.taskUrl)
+                xhr.open('GET', taskInfo.taskUrl,true)
                 xhr.send()
             },
             checkNext: function () {
