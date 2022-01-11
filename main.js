@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.8
+// @version      0.8.1
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -24,6 +24,16 @@
     //https://stackoverflow.com/a/55165133
     //也感谢每一位相信琴梨梨的用户
 
+    //干掉日志
+    (function(open) {
+        XMLHttpRequest.prototype.open = function(method, url, async, user, pass) {
+            if(url.startsWith("https://iflow-api.xuexi.cn/logflow/api/v1/pclog")>0){
+                console.log("Rejected Log XHR! "+url+" -Qinlili")
+                url="data:text,null"
+            }
+            open.call(this, method, url, async, user, pass);
+        };
+    })(XMLHttpRequest.prototype.open);
     //干掉PDF水印
     if(document.location.host=="preview-pdf.xuexi.cn"){
         CanvasRenderingContext2D.prototype.fillText=function(){}
@@ -525,9 +535,9 @@
                 SakiProgress.setText("正在回到第一页...");
                 SakiProgress.setPercent(4);
                 await sleep(100)
-                //回到第一页
                 for(;document.getElementsByClassName("ctrl-icon")[2].className.animVal.indexOf("disabled")<0;){
                     document.getElementsByClassName("ctrl-icon")[2].parentElement.click()
+                    await sleep(50)
                 }
                 //创建文件
                 SakiProgress.setText("正在创建文件...");
