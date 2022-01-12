@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.8.3
+// @version      0.9
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -413,8 +413,8 @@
     const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
     //主站检测
     if(document.location.host=="www.xuexi.cn"||document.location.host=="preview-pdf.xuexi.cn"){
-        console.log("JS Loaded,Sleep 5 Sec-Qinlili");
-        await sleep(5000)
+        console.log("JS Loaded,Sleep 3 Sec-Qinlili");
+        await sleep(3000)
         if(window.self === window.top){
             //初始化下载工具条
             XHRDL.init();
@@ -429,6 +429,64 @@
             dlPannel.appendChild(dlText);
             var first=document.body.firstChild;
             document.body.insertBefore(dlPannel,first);
+            //接管登录
+            if(document.getElementsByClassName("icon login-icon")[0]){
+                var dlBtn=document.getElementsByClassName("icon login-icon")[0];
+                var dlPrt=dlBtn.parentElement;
+                dlPrt.removeChild(dlBtn);
+                dlBtn=document.createElement("a");
+                dlBtn.className="icon login-icon";
+                dlPrt.appendChild(dlBtn);
+                dlBtn.addEventListener("click",async function(e){
+                    e.preventDefault();
+                    SakiProgress.showDiv();
+                    SakiProgress.setPercent(5);
+                    SakiProgress.setText("正在准备登录...")
+                    console.log("Login Hooked!-Qinlili");
+                    var closeBtn=SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==")
+                    var loginFrame=document.createElement("iframe");
+                    loginFrame.style="z-index:9999;position:fixed;background-color:white;width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
+                    document.body.appendChild(loginFrame);
+                    closeBtn.onclick=function(){
+                        document.body.removeChild(loginFrame);
+                        SakiProgress.removeBtn(closeBtn);
+                        closeBtn=false;
+                        SakiProgress.clearProgress();
+                        SakiProgress.hideDiv();
+                    }
+                    await sleep(100);
+                    SakiProgress.setPercent(10);
+                    SakiProgress.setText("正在获取登录口令...");
+                    let token=await fetch("https://pc-api.xuexi.cn/open/api/sns/sign")
+                    const tokenText=JSON.parse(await token.text())
+                    if(tokenText.code="200"){
+                        token=tokenText.data.sign;
+                        SakiProgress.setPercent(40);
+                        SakiProgress.setText("口令获取成功，加载登录页面...");
+                        loginFrame.onload=function(){
+                            SakiProgress.setPercent(65);
+                            SakiProgress.setText("等待扫码...");
+                        }
+                        loginFrame.src="https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state="+token+"&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
+                        window.addEventListener("message",function receiveMessage(event){
+                            event.preventDefault();
+                            console.log(event);
+                            if(event.data.success==true){
+                                SakiProgress.setPercent(100);
+                                SakiProgress.setText("登录成功，正在刷新页面...");
+                                document.location.reload();
+                            }else{
+                                SakiProgress.setPercent(100);
+                                SakiProgress.setText("出错了：扫码登录失败，错误码为"+event.data.errorCode);
+                            }
+                        }, false);
+                    }else{
+                        token=""
+                        SakiProgress.setPercent(100);
+                        SakiProgress.setText("出错了：获取口令失败！");
+                    }
+                })
+            }
             //检测爬取页面类型
             console.log("Detecting Page "+document.location.pathname+"-Qinlili");
             var detected=false;
