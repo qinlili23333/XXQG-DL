@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      0.9.1
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -9,9 +9,10 @@
 // @match        *://boot-source.xuexi.cn/audiodown?*
 // @match        *://preview-pdf.xuexi.cn/*
 // @match        *://article.xuexi.cn/*
+// @match        *://login.xuexi.cn/login/xuexiWeb?*
 // @icon         https://www.xuexi.cn/favicon.ico
 // @grant        none
-// @run-at        document-idle
+// @run-at        document-end
 // @require        https://cdn.jsdelivr.net/npm/jspdf@2.4.0/dist/jspdf.umd.min.js
 // @license        Anti996License
 // ==/UserScript==
@@ -41,6 +42,11 @@
                 valueProp.set.call(this, newimgValue);
             }
         });
+    }
+    //登录页面背景透明
+    if(document.location.href.indexOf("login.xuexi.cn/login/xuexiWeb?")>1){
+        document.body.style.background="none transparent";
+        document.getElementsByClassName("login_content")[0].style.background="none"
     }
     //干掉日志
     (function(open) {
@@ -234,8 +240,8 @@
                     return false;
                 }
                 this.isLoaded = true;
-                this.listBtn = SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxnPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjwvZz48Zz48Zz48cGF0aCBkPSJNMTguMzIsNC4yNkMxNi44NCwzLjA1LDE1LjAxLDIuMjUsMTMsMi4wNXYyLjAyYzEuNDYsMC4xOCwyLjc5LDAuNzYsMy45LDEuNjJMMTguMzIsNC4yNnogTTE5LjkzLDExaDIuMDIgYy0wLjItMi4wMS0xLTMuODQtMi4yMS01LjMyTDE4LjMxLDcuMUMxOS4xNyw4LjIxLDE5Ljc1LDkuNTQsMTkuOTMsMTF6IE0xOC4zMSwxNi45bDEuNDMsMS40M2MxLjIxLTEuNDgsMi4wMS0zLjMyLDIuMjEtNS4zMiBoLTIuMDJDMTkuNzUsMTQuNDYsMTkuMTcsMTUuNzksMTguMzEsMTYuOXogTTEzLDE5LjkzdjIuMDJjMi4wMS0wLjIsMy44NC0xLDUuMzItMi4yMWwtMS40My0xLjQzIEMxNS43OSwxOS4xNywxNC40NiwxOS43NSwxMywxOS45M3ogTTEzLDEyVjdoLTJ2NUg3bDUsNWw1LTVIMTN6IE0xMSwxOS45M3YyLjAyYy01LjA1LTAuNS05LTQuNzYtOS05Ljk1czMuOTUtOS40NSw5LTkuOTV2Mi4wMiBDNy4wNSw0LjU2LDQsNy45Miw0LDEyUzcuMDUsMTkuNDQsMTEsMTkuOTN6Ii8+PC9nPjwvZz48L3N2Zz4=");
-                this.listBtn.onclick = XHRDL.showList;
+                //this.listBtn = SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxnPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjwvZz48Zz48Zz48cGF0aCBkPSJNMTguMzIsNC4yNkMxNi44NCwzLjA1LDE1LjAxLDIuMjUsMTMsMi4wNXYyLjAyYzEuNDYsMC4xOCwyLjc5LDAuNzYsMy45LDEuNjJMMTguMzIsNC4yNnogTTE5LjkzLDExaDIuMDIgYy0wLjItMi4wMS0xLTMuODQtMi4yMS01LjMyTDE4LjMxLDcuMUMxOS4xNyw4LjIxLDE5Ljc1LDkuNTQsMTkuOTMsMTF6IE0xOC4zMSwxNi45bDEuNDMsMS40M2MxLjIxLTEuNDgsMi4wMS0zLjMyLDIuMjEtNS4zMiBoLTIuMDJDMTkuNzUsMTQuNDYsMTkuMTcsMTUuNzksMTguMzEsMTYuOXogTTEzLDE5LjkzdjIuMDJjMi4wMS0wLjIsMy44NC0xLDUuMzItMi4yMWwtMS40My0xLjQzIEMxNS43OSwxOS4xNywxNC40NiwxOS43NSwxMywxOS45M3ogTTEzLDEyVjdoLTJ2NUg3bDUsNWw1LTVIMTN6IE0xMSwxOS45M3YyLjAyYy01LjA1LTAuNS05LTQuNzYtOS05Ljk1czMuOTUtOS40NSw5LTkuOTV2Mi4wMiBDNy4wNSw0LjU2LDQsNy45Miw0LDEyUzcuMDUsMTkuNDQsMTEsMTkuOTN6Ii8+PC9nPjwvZz48L3N2Zz4=");
+                //this.listBtn.onclick = XHRDL.showList;
                 SakiProgress.showDiv();
                 SakiProgress.setText("初始化下载器...");
                 SakiProgress.setPercent(20);
@@ -445,46 +451,54 @@
                     console.log("Login Hooked!-Qinlili");
                     var closeBtn=SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==")
                     var loginFrame=document.createElement("iframe");
-                    loginFrame.style="z-index:9999;position:fixed;background-color:white;width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
+                    loginFrame.style="z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
                     document.body.appendChild(loginFrame);
+                    var refreshBtn=SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNDhweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iNDhweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNy42NSA2LjM1QzE2LjIgNC45IDE0LjIxIDQgMTIgNGMtNC40MiAwLTcuOTkgMy41OC03Ljk5IDhzMy41NyA4IDcuOTkgOGMzLjczIDAgNi44NC0yLjU1IDcuNzMtNmgtMi4wOGMtLjgyIDIuMzMtMy4wNCA0LTUuNjUgNC0zLjMxIDAtNi0yLjY5LTYtNnMyLjY5LTYgNi02YzEuNjYgMCAzLjE0LjY5IDQuMjIgMS43OEwxMyAxMWg3VjRsLTIuMzUgMi4zNXoiLz48L3N2Zz4=")
+                    refreshBtn.onclick=function(){
+                        scanLogin();
+                    }
                     closeBtn.onclick=function(){
                         document.body.removeChild(loginFrame);
                         SakiProgress.removeBtn(closeBtn);
+                        SakiProgress.removeBtn(refreshBtn);
                         closeBtn=false;
                         SakiProgress.clearProgress();
                         SakiProgress.hideDiv();
                     }
-                    await sleep(100);
-                    SakiProgress.setPercent(10);
-                    SakiProgress.setText("正在获取登录口令...");
-                    let token=await fetch("https://pc-api.xuexi.cn/open/api/sns/sign")
-                    const tokenText=JSON.parse(await token.text())
-                    if(tokenText.code="200"){
-                        token=tokenText.data.sign;
-                        SakiProgress.setPercent(40);
-                        SakiProgress.setText("口令获取成功，加载登录页面...");
-                        loginFrame.onload=function(){
-                            SakiProgress.setPercent(65);
-                            SakiProgress.setText("等待扫码...");
-                        }
-                        loginFrame.src="https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state="+token+"&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
-                        window.addEventListener("message",function receiveMessage(event){
-                            event.preventDefault();
-                            console.log(event);
-                            if(event.data.success==true){
-                                SakiProgress.setPercent(100);
-                                SakiProgress.setText("登录成功，正在刷新页面...");
-                                document.location.reload();
-                            }else{
-                                SakiProgress.setPercent(100);
-                                SakiProgress.setText("出错了：扫码登录失败，错误码为"+event.data.errorCode);
+                    async function scanLogin(){
+                        await sleep(100);
+                        SakiProgress.setPercent(10);
+                        SakiProgress.setText("正在获取登录口令...");
+                        let token=await fetch("https://pc-api.xuexi.cn/open/api/sns/sign")
+                        const tokenText=JSON.parse(await token.text())
+                        if(tokenText.code="200"){
+                            token=tokenText.data.sign;
+                            SakiProgress.setPercent(40);
+                            SakiProgress.setText("口令获取成功，加载登录页面...");
+                            loginFrame.onload=function(){
+                                SakiProgress.setPercent(65);
+                                SakiProgress.setText("等待扫码...");
                             }
-                        }, false);
-                    }else{
-                        token=""
-                        SakiProgress.setPercent(100);
-                        SakiProgress.setText("出错了：获取口令失败！");
+                            loginFrame.src="https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state="+token+"&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
+                            window.addEventListener("message",function receiveMessage(event){
+                                event.preventDefault();
+                                console.log(event);
+                                if(event.data.success==true){
+                                    SakiProgress.setPercent(100);
+                                    SakiProgress.setText("登录成功，正在刷新页面...");
+                                    document.location.reload();
+                                }else{
+                                    SakiProgress.setPercent(100);
+                                    SakiProgress.setText("出错了：扫码登录失败，错误码为"+event.data.errorCode);
+                                }
+                            }, false);
+                        }else{
+                            token=""
+                            SakiProgress.setPercent(100);
+                            SakiProgress.setText("出错了：获取口令失败！");
+                        }
                     }
+                    scanLogin();
                 })
             }
             //检测爬取页面类型
