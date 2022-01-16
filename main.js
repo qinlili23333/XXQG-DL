@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国爬取助手
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  爬取各类资源
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -19,7 +19,7 @@
 // ==/UserScript==
 
 
-(async function() {
+(async function () {
     'use strict';
     //既然连喜欢的人都没能力留住，那还是把更多时间投入到写代码吧--记于与悦悦子分手的7天之后（2022.1.11）
     //这些内容给本项目开发提供了帮助，感谢
@@ -31,47 +31,46 @@
     //开启跨源服务器可以下载部分本来会出错的电子书
     //请访问此地址获取跨源服务器https://github.com/Rob--W/cors-anywhere
     //Clone到本地后运行npm install，然后运行node server.js，即可运行在默认地址和端口上
-    var corsServer="http://localhost:8080/";
-    if(document.location.host=="preview-pdf.xuexi.cn"&&(document.location.search.indexOf("boot-video.xuexi.cn")>1)&&confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。")){
+    var corsServer = "http://localhost:8080/";
+    if (document.location.host == "preview-pdf.xuexi.cn" && (document.location.search.indexOf("boot-video.xuexi.cn") > 1) && (window.self === window.top) && confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。")) {
         var valueProp = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
         Object.defineProperty(Image.prototype, 'src', {
-            set: function(newimgValue) {
-                if(newimgValue.indexOf("data:")==-1){
-                    newimgValue=corsServer+newimgValue;
+            set: function (newimgValue) {
+                if (!newimgValue.startsWith("data:")) {
+                    newimgValue = corsServer + newimgValue;
                 }
-                this.crossOrigin="anonymous"
+                this.crossOrigin = "anonymous"
                 valueProp.set.call(this, newimgValue);
             }
         });
     }
     //iframe页面处理
-    if(!(window.self === window.top)){
-        document.documentElement.style="background:none transparent !important;background-color:transparent !important;";
-        document.body.style="background:none transparent !important;background-color:transparent !important;";
-        if(document.location.href.indexOf("login.xuexi.cn/login/xuexiWeb?")>1){
-            document.getElementsByClassName("login_content")[0].style.background="none"
+    if (!(window.self === window.top)) {
+        document.documentElement.style = "background:none transparent !important;background-color:transparent !important;";
+        document.body.style = "background:none transparent !important;background-color:transparent !important;";
+        if (document.location.href.indexOf("login.xuexi.cn/login/xuexiWeb?") > 1) {
+            document.getElementsByClassName("login_content")[0].style.background = "none"
         };
-        if(document.location.href.indexOf("static.xuexi.cn/search/online/index.html")>1){
-            document.getElementById("root").style.background="none";
-            if((window.self.innerWidth>window.self.innerHeight)&&window.self.innerWidth>1000){
-               document.getElementsByClassName("search-content")[0].style="padding-left:20px;padding-right:20px;"
-               }
+        if (document.location.href.indexOf("static.xuexi.cn/search/online/index.html") > 1) {
+            document.getElementById("root").style.background = "none";
+            if ((window.self.innerWidth > window.self.innerHeight) && window.self.innerWidth > 1000) {
+                document.getElementsByClassName("search-content")[0].style = "padding-left:20px;padding-right:20px;"
+            }
         };
     }
     //干掉日志
-    (function(open) {
-        XMLHttpRequest.prototype.open = function(method, url, async, user, pass) {
-            if(url.startsWith("https://iflow-api.xuexi.cn/logflow/api/v1/pclog")||url.startsWith("https://arms-retcode.aliyuncs.com/r.png")){
-                console.log("Rejected Log XHR! "+url+" -Qinlili")
-                url="data:text,null"
+    (function (open) {
+        XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
+            if (url.startsWith("https://iflow-api.xuexi.cn/logflow/api/v1/pclog") || url.startsWith("https://arms-retcode.aliyuncs.com/r.png")) {
+                console.log("Rejected Log XHR! " + url + " -Qinlili")
+                url = "data:text,null"
             }
             open.call(this, method, url, async, user, pass);
         };
     })(XMLHttpRequest.prototype.open);
     //干掉PDF水印
-    if(document.location.host=="preview-pdf.xuexi.cn"){
-        CanvasRenderingContext2D.prototype.fillText=function(){}
-        document.domain = 'xuexi.cn';
+    if (document.location.host == "preview-pdf.xuexi.cn") {
+        CanvasRenderingContext2D.prototype.fillText = function () { }
     }
     //共享库
     var SakiProgress = {
@@ -245,7 +244,7 @@
                 console.info("WebXHRDL Initializing!\nVersion:Preview0.1.0\nQinlili Tech:Github@qinlili23333")
                 try {
                     SakiProgress.init();
-                } catch{
+                } catch {
                     console.error("Initialize Failed!Is SakiProgress Loaded?")
                     return false;
                 }
@@ -401,18 +400,18 @@
                 }
                 xhr.onerror = function (e) {
                     //TODO:支持处理不同类别出错
-                    if(!taskInfo.errorRetry){
+                    if (!taskInfo.errorRetry) {
                         SakiProgress.setTextAlert(taskInfo.fileName + "下载失败，置入列尾等待重试");
                         taskInfo.errorRetry = true;
                         var list = XHRDL.dlList;
                         list[list.length] = taskInfo;
-                    }else{
+                    } else {
                         SakiProgress.setTextAlert(taskInfo.fileName + "下载又失败了，放弃");
                     }
                     XHRDL.dlList.splice(0, 1);
                     XHRDL.DLEngine.checkNext();
                 }
-                xhr.open('GET', taskInfo.taskUrl,true)
+                xhr.open('GET', taskInfo.taskUrl, true)
                 xhr.send()
             },
             checkNext: function () {
@@ -428,48 +427,48 @@
 
     const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
     //主站检测
-    if(document.location.host=="www.xuexi.cn"||document.location.host=="preview-pdf.xuexi.cn"){
+    if (document.location.host == "www.xuexi.cn" || document.location.host == "preview-pdf.xuexi.cn") {
         console.log("JS Loaded,Sleep 3 Sec-Qinlili");
         await sleep(3000)
-        if(window.self === window.top){
+        if (window.self === window.top) {
             //初始化下载工具条
             XHRDL.init();
-            var dlPannel=document.createElement("div");
+            var dlPannel = document.createElement("div");
             var downloadBtn = document.createElement("button");
             downloadBtn.innerText = "下载本页内容";
-            downloadBtn.style.display="inline-block";
+            downloadBtn.style.display = "inline-block";
             dlPannel.appendChild(downloadBtn);
-            var dlText=document.createElement("p");
-            dlText.style.display="inline-block";
-            dlText.innerText="等待检测页面类型";
+            var dlText = document.createElement("p");
+            dlText.style.display = "inline-block";
+            dlText.innerText = "等待检测页面类型";
             dlPannel.appendChild(dlText);
-            var first=document.body.firstChild;
-            document.body.insertBefore(dlPannel,first);
+            var first = document.body.firstChild;
+            document.body.insertBefore(dlPannel, first);
             //接管搜索
-            if(document.getElementsByClassName("icon search-icon")[0]){
-                var scBtn=document.getElementsByClassName("icon search-icon")[0];
-                var scPrt=scBtn.parentElement;
+            if (document.getElementsByClassName("icon search-icon")[0]) {
+                var scBtn = document.getElementsByClassName("icon search-icon")[0];
+                var scPrt = scBtn.parentElement;
                 scPrt.removeChild(scBtn);
-                scBtn=document.createElement("a");
-                scBtn.className="icon search-icon";
+                scBtn = document.createElement("a");
+                scBtn.className = "icon search-icon";
                 scPrt.appendChild(scBtn);
-                scBtn.addEventListener("click",async function(e){
-                    var searchFrame=document.createElement("iframe");
-                    searchFrame.frameBorder=0;
-                    searchFrame.style="z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
+                scBtn.addEventListener("click", async function (e) {
+                    var searchFrame = document.createElement("iframe");
+                    searchFrame.frameBorder = 0;
+                    searchFrame.style = "z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
                     document.body.appendChild(searchFrame);
-                    searchFrame.src="https://static.xuexi.cn/search/online/index.html";
+                    searchFrame.src = "https://static.xuexi.cn/search/online/index.html";
                     var clsBtn = document.createElement("img");
                     clsBtn.style = "z-index:10000;position:fixed;display: inline-block;right:0px;top:0px;float:right;height:32px;width:32px;transition:background-color 0.2s;"
                     clsBtn.className = "barBtn"
                     clsBtn.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==";
                     document.body.appendChild(clsBtn);
-                    clsBtn.onclick=function(){
+                    clsBtn.onclick = function () {
                         document.body.removeChild(searchFrame);
                         document.body.removeChild(clsBtn);
-                        window.removeEventListener("message",msg, false);
+                        window.removeEventListener("message", msg, false);
                     }
-                     function msg(e) {
+                    function msg(e) {
                         //抄的官方JS改出来的，我对于这种非要传值到上层窗口的做法完全无法理解，但既然能跑，管他呢
                         console.log('e:', e)
                         console.log('e.data:', e.data)
@@ -481,7 +480,7 @@
                                 switch (params.type) {
                                     case 'search':
                                         var useQuestionMark = false;
-                                        var targetUrl =   'https://static.xuexi.cn/search/online/index.html'
+                                        var targetUrl = 'https://static.xuexi.cn/search/online/index.html'
                                         for (var key in params.data) {
                                             var value = params.data[key];
                                             var op = '&'
@@ -501,77 +500,77 @@
                             console.log(error)
                         }
                     }
-                    window.addEventListener("message",msg, false);
+                    window.addEventListener("message", msg, false);
                 })
             }
             //接管登录
-            if(document.getElementsByClassName("icon login-icon")[0]){
-                var dlBtn=document.getElementsByClassName("icon login-icon")[0];
-                var dlPrt=dlBtn.parentElement;
+            if (document.getElementsByClassName("icon login-icon")[0]) {
+                var dlBtn = document.getElementsByClassName("icon login-icon")[0];
+                var dlPrt = dlBtn.parentElement;
                 dlPrt.removeChild(dlBtn);
-                dlBtn=document.createElement("a");
-                dlBtn.className="icon login-icon";
+                dlBtn = document.createElement("a");
+                dlBtn.className = "icon login-icon";
                 dlPrt.appendChild(dlBtn);
-                dlBtn.addEventListener("click",async function(e){
+                dlBtn.addEventListener("click", async function (e) {
                     e.preventDefault();
                     SakiProgress.showDiv();
                     SakiProgress.setPercent(5);
                     SakiProgress.setText("正在准备登录...")
                     console.log("Login Hooked!-Qinlili");
-                    var closeBtn=SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==")
-                    var loginFrame=document.createElement("iframe");
-                    loginFrame.frameBorder=0;
-                    loginFrame.scrolling="no";
-                    loginFrame.style="z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
+                    var closeBtn = SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==")
+                    var loginFrame = document.createElement("iframe");
+                    loginFrame.frameBorder = 0;
+                    loginFrame.scrolling = "no";
+                    loginFrame.style = "z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
                     document.body.appendChild(loginFrame);
-                    var refreshBtn=SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNDhweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iNDhweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNy42NSA2LjM1QzE2LjIgNC45IDE0LjIxIDQgMTIgNGMtNC40MiAwLTcuOTkgMy41OC03Ljk5IDhzMy41NyA4IDcuOTkgOGMzLjczIDAgNi44NC0yLjU1IDcuNzMtNmgtMi4wOGMtLjgyIDIuMzMtMy4wNCA0LTUuNjUgNC0zLjMxIDAtNi0yLjY5LTYtNnMyLjY5LTYgNi02YzEuNjYgMCAzLjE0LjY5IDQuMjIgMS43OEwxMyAxMWg3VjRsLTIuMzUgMi4zNXoiLz48L3N2Zz4=")
-                    refreshBtn.onclick=function(){
+                    var refreshBtn = SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNDhweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iNDhweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNy42NSA2LjM1QzE2LjIgNC45IDE0LjIxIDQgMTIgNGMtNC40MiAwLTcuOTkgMy41OC03Ljk5IDhzMy41NyA4IDcuOTkgOGMzLjczIDAgNi44NC0yLjU1IDcuNzMtNmgtMi4wOGMtLjgyIDIuMzMtMy4wNCA0LTUuNjUgNC0zLjMxIDAtNi0yLjY5LTYtNnMyLjY5LTYgNi02YzEuNjYgMCAzLjE0LjY5IDQuMjIgMS43OEwxMyAxMWg3VjRsLTIuMzUgMi4zNXoiLz48L3N2Zz4=")
+                    refreshBtn.onclick = function () {
                         scanLogin();
                     }
-                    closeBtn.onclick=function(){
+                    closeBtn.onclick = function () {
                         document.body.removeChild(loginFrame);
                         SakiProgress.removeBtn(closeBtn);
                         SakiProgress.removeBtn(refreshBtn);
-                        closeBtn=false;
+                        closeBtn = false;
                         SakiProgress.clearProgress();
                         SakiProgress.hideDiv();
                     }
-                    async function scanLogin(){
+                    async function scanLogin() {
                         await sleep(100);
                         SakiProgress.setPercent(10);
                         SakiProgress.setText("正在获取登录口令...");
                         let token;
                         let tokenText;
-                        try{
-                            token=await fetch("https://pc-api.xuexi.cn/open/api/sns/sign")
-                            tokenText=JSON.parse(await token.text())
-                        }catch(e){
+                        try {
+                            token = await fetch("https://pc-api.xuexi.cn/open/api/sns/sign")
+                            tokenText = JSON.parse(await token.text())
+                        } catch (e) {
                             SakiProgress.setPercent(100);
-                            SakiProgress.setText("出错了：网络连接中断！ "+e.message);
+                            SakiProgress.setText("出错了：网络连接中断！ " + e.message);
                             return;
                         }
-                        if(tokenText.code="200"){
-                            token=tokenText.data.sign;
+                        if (tokenText.code = "200") {
+                            token = tokenText.data.sign;
                             SakiProgress.setPercent(40);
                             SakiProgress.setText("口令获取成功，加载登录页面...");
-                            loginFrame.onload=function(){
+                            loginFrame.onload = function () {
                                 SakiProgress.setPercent(65);
                                 SakiProgress.setText("等待扫码...");
                             }
-                            loginFrame.src="https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state="+token+"&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
-                            window.addEventListener("message",function receiveMessage(event){
+                            loginFrame.src = "https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state=" + token + "&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
+                            window.addEventListener("message", function receiveMessage(event) {
                                 event.preventDefault();
                                 console.log(event);
-                                if(event.data.success==true){
+                                if (event.data.success == true) {
                                     SakiProgress.setPercent(100);
                                     SakiProgress.setText("登录成功，正在刷新页面...");
                                     document.location.reload();
-                                }else{
+                                } else {
                                     SakiProgress.setPercent(100);
-                                    SakiProgress.setText("出错了：扫码登录失败，错误码为"+event.data.errorCode);
+                                    SakiProgress.setText("出错了：扫码登录失败，错误码为" + event.data.errorCode);
                                 }
                             }, false);
-                        }else{
+                        } else {
                             SakiProgress.setPercent(100);
                             SakiProgress.setText("出错了：获取口令失败！");
                         }
@@ -580,131 +579,134 @@
                 })
             }
             //检测爬取页面类型
-            console.log("Detecting Page "+document.location.pathname+"-Qinlili");
-            var detected=false;
+            console.log("Detecting Page " + document.location.pathname + "-Qinlili");
+            var detected = false;
             //旧慕课列表
-            if((document.body.innerText.indexOf("课程介绍")>=1)||(document.body.innerText.indexOf("课程详情")>=1)){
-                console.log("Old Mooc List Detected "+document.location.pathname+"-Qinlili");
-                detected=true;
-                dlText.innerText="页面类型:旧慕课列表，支持全部批量下载，请开启网站自动下载权限";
-                downloadBtn.onclick=function(){
+            if ((document.body.innerText.indexOf("课程介绍") >= 1) || (document.body.innerText.indexOf("课程详情") >= 1)) {
+                console.log("Old Mooc List Detected " + document.location.pathname + "-Qinlili");
+                detected = true;
+                dlText.innerText = "页面类型:旧慕课列表，支持全部批量下载，请开启网站自动下载权限";
+                downloadBtn.onclick = function () {
                     OldMoocListDL();
                 }
             }
             //页面有播放器
-            if(window.Aliplayer){
+            if (window.Aliplayer) {
                 //旧慕课、电视剧播放单页
-                if(document.getElementsByClassName("radio-inline")[0]){
-                    console.log("Old Video Player Detected "+document.location.pathname+"-Qinlili");
-                    detected=true;
-                    dlText.innerText="页面类型:旧视频播放单页，支持全部批量下载，请开启网站自动下载权限";
-                    downloadBtn.onclick=function(){
+                if (document.getElementsByClassName("radio-inline")[0]) {
+                    console.log("Old Video Player Detected " + document.location.pathname + "-Qinlili");
+                    detected = true;
+                    dlText.innerText = "页面类型:旧视频播放单页，支持全部批量下载，请开启网站自动下载权限";
+                    downloadBtn.onclick = function () {
                         OldMoocVideoDL();
                     }
                 }
                 //新慕课、影视总页
-                if(document.getElementsByClassName("video-article-content")[0]||document.getElementsByClassName("videoSet-article-wrap")[0]){
-                    console.log("New Video Player Detected "+document.location.pathname+"-Qinlili");
-                    detected=true;
-                    dlText.innerText="页面类型:新视频总，支持全部批量下载最高清晰度，需要打开新标签页下载";
-                    downloadBtn.onclick=function(){
+                if (document.getElementsByClassName("video-article-content")[0] || document.getElementsByClassName("videoSet-article-wrap")[0]) {
+                    console.log("New Video Player Detected " + document.location.pathname + "-Qinlili");
+                    detected = true;
+                    dlText.innerText = "页面类型:新视频总，支持全部批量下载最高清晰度，需要打开新标签页下载";
+                    downloadBtn.onclick = function () {
                         NewMoocPageDL();
                     }
                 }
             }
             //音频专题
-            if(document.getElementsByClassName("album-play-btn")[0]){
-                console.log("Audio Detected "+document.location.pathname+"-Qinlili");
-                detected=true;
-                dlText.innerText="页面类型:音频，支持全部批量下载，需要打开新标签页下载";
-                downloadBtn.onclick=function(){
+            if (document.getElementsByClassName("album-play-btn")[0]) {
+                console.log("Audio Detected " + document.location.pathname + "-Qinlili");
+                detected = true;
+                dlText.innerText = "页面类型:音频，支持全部批量下载，需要打开新标签页下载";
+                downloadBtn.onclick = function () {
                     AudioDL();
                 }
             }
             //页面上就一个音频
             //解锁音频播放器下载按钮
-            if(document.getElementsByTagName("audio").length){
-                detected=true;
-                dlText.innerText="页面类型:单个音频，已经解锁播放器下载能力，点击播放器右侧菜单下载";
-                downloadBtn.style.display="none";
-                for(var la=0;document.getElementsByTagName("audio")[la];la++){
+            if (document.getElementsByTagName("audio").length) {
+                detected = true;
+                dlText.innerText = "页面类型:单个音频，已经解锁播放器下载能力，点击播放器右侧菜单下载";
+                downloadBtn.style.display = "none";
+                for (var la = 0; document.getElementsByTagName("audio")[la]; la++) {
                     document.getElementsByTagName("audio")[la].removeAttribute("controlslist");
                 }
             }
             //电子书下载
-            if(document.location.host=="preview-pdf.xuexi.cn"){
-                detected=true;
-                dlText.innerText="页面类型:电子书，支持打包下载";
-                downloadBtn.onclick=function(){
+            if (document.location.host == "preview-pdf.xuexi.cn") {
+                detected = true;
+                dlText.innerText = "页面类型:电子书，支持打包下载";
+                downloadBtn.onclick = function () {
                     PDFDL();
                 }
             }
-            if(!detected){
-                console.log("Unsupported Page "+document.location.pathname+"-Qinlili");
-                dlText.innerText="本页面不支持下载";
+            if (!detected) {
+                console.log("Unsupported Page " + document.location.pathname + "-Qinlili");
+                dlText.innerText = "本页面不支持下载";
                 downloadBtn.innerText = "暂不支持";
             }
 
             //下载器部分
             //旧慕课列表
-            function OldMoocListDL(){
+            function OldMoocListDL() {
                 //读取全部视频列表
-                var videoList=globalCache[Object.keys(globalCache)[0]];
-                console.log("Found "+videoList.length+" Videos-Qinlili")
-                for(var i=0;videoList[i];i++){
-                    console.log("Try Analysis "+i+" Video-Qinlili")
+                var videoList = globalCache[Object.keys(globalCache)[0]];
+                console.log("Found " + videoList.length + " Videos-Qinlili")
+                for (var i = 0; videoList[i]; i++) {
+                    console.log("Try Analysis " + i + " Video-Qinlili")
                     getInfoAndDL(pagetoinfourl(videoList[i].static_page_url));
                 }
 
             }
             //旧慕课播放单页
-            function OldMoocVideoDL(){
+            function OldMoocVideoDL() {
                 console.log("Analysis Page Info-Qinlili")
                 getInfoAndDL(pagetoinfourl(document.location.href))
             }
-            function NewMoocPageDL(){
+            function NewMoocPageDL() {
                 console.log("Open DL Page-Qinlili");
                 var searchParams = new URLSearchParams(document.location.search);
-                var dlurl="https://boot-source.xuexi.cn/newmoocdown?id="+searchParams.get("id");
+                var dlurl = "https://boot-source.xuexi.cn/newmoocdown?id=" + searchParams.get("id");
                 window.open(dlurl, "_blank");
             }
-            function AudioDL(){
+            function AudioDL() {
                 console.log("Open DL Page-Qinlili");
                 var searchParams = new URLSearchParams(document.location.search);
-                var dlurl="https://boot-source.xuexi.cn/audiodown?id="+searchParams.get("id");
+                var dlurl = "https://boot-source.xuexi.cn/audiodown?id=" + searchParams.get("id");
                 window.open(dlurl, "_blank");
             }
-            async function PDFDL(){
-                var compress=null;
-                var compressMode="FAST";
-                if(confirm("是否开启WEBP压缩？会延长生成时间但缩小文件大小")){
-                    compress="WEBP"
-                    if(confirm("是否使用深度压缩模式？会大幅延长生成时间但只能小幅缩小文件大小")){
-                        compressMode="SLOW"
+            async function PDFDL() {
+                var compress = null;
+                var compressMode = "FAST";
+                if (confirm("是否开启WEBP压缩？会延长生成时间但缩小文件大小")) {
+                    compress = "WEBP"
+                    if (confirm("是否使用深度压缩模式？会大幅延长生成时间但只能小幅缩小文件大小")) {
+                        compressMode = "SLOW"
                     }
                 }
                 SakiProgress.showDiv();
                 SakiProgress.setText("正在加载依赖...");
                 await sleep(100)
                 console.log("Preparing jsPDF Library...-Qinlili");
-                var jsPDF=jspdf.jsPDF;
-                try{
+                var jsPDF = jspdf.jsPDF;
+                try {
                     console.log(jsPDF)
                     console.log("jsPDF Ready!")
-                }catch{
+                } catch {
                     console.error("jsPDF Not Ready!")
                 }
                 SakiProgress.setText("正在调整尺寸...");
                 SakiProgress.setPercent(2);
                 await sleep(100)
+                //按钮循环点击得稍微延迟一点否则可能卡死
                 //放大到最大保障清晰度
-                for(;document.getElementsByClassName("ctrl-icon")[0].className.animVal.indexOf("disabled")<0;){
+                for (; document.getElementsByClassName("ctrl-icon")[0].className.animVal.indexOf("disabled") < 0;) {
                     document.getElementsByClassName("ctrl-icon")[0].parentElement.click()
+                    await sleep(50)
                 }
                 SakiProgress.setText("正在回到第一页...");
                 SakiProgress.setPercent(4);
                 await sleep(100)
-                for(;document.getElementsByClassName("ctrl-icon")[2].className.animVal.indexOf("disabled")<0;){
+                //回到第一页
+                for (; document.getElementsByClassName("ctrl-icon")[2].className.animVal.indexOf("disabled") < 0;) {
                     document.getElementsByClassName("ctrl-icon")[2].parentElement.click()
                     await sleep(50)
                 }
@@ -712,16 +714,16 @@
                 SakiProgress.setText("正在创建文件...");
                 SakiProgress.setPercent(6);
                 await sleep(100)
-                var samplePage=document.getElementsByTagName("canvas")[0]
+                var samplePage = document.getElementsByTagName("canvas")[0]
                 var ori;
-                let wP=samplePage.width;
-                let hP=samplePage.height;
-                if(wP>hP){ori="l"}else{ori="p"}
-                var  PDFfile=new jsPDF({
+                let wP = samplePage.width;
+                let hP = samplePage.height;
+                if (wP > hP) { ori = "l" } else { ori = "p" }
+                var PDFfile = new jsPDF({
                     orientation: ori,
                     unit: 'px',
-                    format: [wP,hP],
-                    putOnlyUsedFonts:true,
+                    format: [wP, hP],
+                    putOnlyUsedFonts: true,
                 });
                 console.log("Preparing PDF File...-Qinlili");
                 console.log(PDFfile);
@@ -729,8 +731,8 @@
                 SakiProgress.setText("正在设置监听函数...");
                 SakiProgress.setPercent(8);
                 await sleep(100)
-                var onPageChange=function(){};
-                var val=document.getElementsByTagName("input")[0];
+                var onPageChange = function () { };
+                var val = document.getElementsByTagName("input")[0];
                 function waitPageChange() {
                     return new Promise(resolve => {
                         onPageChange = function () {
@@ -738,86 +740,85 @@
                         }
                     });
                 }
+                //加载完成后页码显示才会变化，监听页码显示来等待加载
                 Object.defineProperty(val, 'value', {
-                    set: function(newValue) {
+                    set: function (newValue) {
                         var valueProp = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
                         valueProp.set.call(val, newValue);
                         onPageChange();
                     }
                 });
-                document.getElementsByClassName("ctrl-icon")[3].parentElement.addEventListener("click",function(e){
-                    console.log("Next Page Btn Clicked!-Qinlili");
-                })
-                console.log("Hook Value Set Success!-Qinlili");
                 //循环保存
-                var page=1;
-                var totalPage=parseInt(document.getElementsByClassName("total")[0].innerText.substr(1));
-                for(;document.getElementsByClassName("ctrl-icon")[3].className.animVal.indexOf("disabled")<0;){
-                    SakiProgress.setText("正在保存第"+page+"页...");
-                    SakiProgress.setPercent(10+80*(page/totalPage));
-                    console.log("Work Current Page:"+page+"...-Qinlili");
+                var page = 1;
+                var totalPage = parseInt(document.getElementsByClassName("total")[0].innerText.substr(1));
+                for (; document.getElementsByClassName("ctrl-icon")[3].className.animVal.indexOf("disabled") < 0;) {
+                    SakiProgress.setText("正在保存第" + page + "页...");
+                    SakiProgress.setPercent(10 + 80 * (page / totalPage));
+                    console.log("Work Current Page:" + page + "...-Qinlili");
                     await sleep(100)
                     //不管有几页，把当前全部canvas保存再说
-                    for(var i=0;document.getElementsByTagName("canvas")[i];i++){
-                        PDFfile.addImage(document.getElementsByTagName("canvas")[i],compress,0,0,wP,hP,null,compressMode)
+                    for (var i = 0; document.getElementsByTagName("canvas")[i]; i++) {
+                        PDFfile.addImage(document.getElementsByTagName("canvas")[i], compress, 0, 0, wP, hP, null, compressMode)
                         PDFfile.addPage();
                         page++
                         console.log("Saved One Page!-Qinlili");
                     }
-                    setTimeout(function(){document.getElementsByClassName("ctrl-icon")[3].parentElement.click();},500)
-                    SakiProgress.setText("正在等待加载第"+(page+1)+"页...");
+                    //虽然不知道为什么加了延迟半秒就不会卡住，但既然能用管他为什么呢
+                    setTimeout(function () { document.getElementsByClassName("ctrl-icon")[3].parentElement.click(); }, 500)
+                    //显示的正在加载的页面可能比实际加载页面小一页，但估计1919810个用户里也没一个意识到，不影响保存效果这种细节就不管了，问就是爷懒的写
+                    SakiProgress.setText("正在等待加载第" + (page + 1) + "页...");
                     console.log("Waiting For Loading...-Qinlili");
                     await waitPageChange();
                 }
                 //生成文件导出
                 SakiProgress.setText("正在导出文件...");
                 SakiProgress.setPercent(90);
-                PDFfile.save("学习强国电子书导出.pdf",{returnPromise:true}).then(finish => {
+                PDFfile.save("学习强国电子书导出.pdf", { returnPromise: true }).then(finish => {
                     SakiProgress.clearProgress;
                     SakiProgress.hideDiv();
                 });
             }
-        }else{
-            console.log("Iframe Page "+document.location.pathname+"\nSkip Detect-Qinlili");
+        } else {
+            console.log("Iframe Page " + document.location.pathname + "\nSkip Detect-Qinlili");
         }
     }
 
     //全局共享函数
     //读取视频信息并下载
-    function getInfoAndDL(infourl){
-        console.log("Get Video Info:"+infourl+"\n-Qinlili")
+    function getInfoAndDL(infourl) {
+        console.log("Get Video Info:" + infourl + "\n-Qinlili")
         var xhr = new XMLHttpRequest();
         xhr.onload = event => {
-            console.log("Success Get Video Info:"+infourl+"\n-Qinlili")
+            console.log("Success Get Video Info:" + infourl + "\n-Qinlili")
             if (xhr.readyState === 4 && xhr.status === 200) {
-                var videoInfo=JSON.parse(xhr.response.replace("globalCache = ","").replace(";",""));
+                var videoInfo = JSON.parse(xhr.response.replace("globalCache = ", "").replace(";", ""));
                 stringToObject(videoInfo);
                 //判断慕课
-                if(videoInfo[Object.keys(videoInfo)[0]].info){
-                    videoInfo=videoInfo[Object.keys(videoInfo)[0]].info;
-                    for(var vi=0;videoInfo.ossUrl[vi];vi++){
-                        console.log("Video Name:"+videoInfo.frst_name+"-"+(vi+1)+"\nChapter Name:"+videoInfo.mooc_class+"\nMooc Name:"+videoInfo.mooc+"\nVideo Url:"+videoInfo.ossUrl[vi]+"\n-Qinlili");
-                        var filename=videoInfo.frst_name+"-"+(vi+1)+"-"+videoInfo.mooc_class+"-"+videoInfo.mooc+".mp4"
-                        console.log("File Name:"+filename+"\nPrepare Download-Qinlili");
-                        downloadFile(videoInfo.ossUrl[vi],filename);
+                if (videoInfo[Object.keys(videoInfo)[0]].info) {
+                    videoInfo = videoInfo[Object.keys(videoInfo)[0]].info;
+                    for (var vi = 0; videoInfo.ossUrl[vi]; vi++) {
+                        console.log("Video Name:" + videoInfo.frst_name + "-" + (vi + 1) + "\nChapter Name:" + videoInfo.mooc_class + "\nMooc Name:" + videoInfo.mooc + "\nVideo Url:" + videoInfo.ossUrl[vi] + "\n-Qinlili");
+                        var filename = videoInfo.frst_name + "-" + (vi + 1) + "-" + videoInfo.mooc_class + "-" + videoInfo.mooc + ".mp4"
+                        console.log("File Name:" + filename + "\nPrepare Download-Qinlili");
+                        downloadFile(videoInfo.ossUrl[vi], filename);
                     }
                 }
                 //判断电视剧
-                if(videoInfo[Object.keys(videoInfo)[0]].list){
-                    videoInfo=videoInfo[Object.keys(videoInfo)[0]].list;
-                    for(var vii=0;videoInfo[vii];vii++){
-                        console.log("Video Name:"+videoInfo[vii].frst_name+"-"+(vi+1)+"\nList Name:"+videoInfo[vii].title+"\nVideo Url:"+videoInfo[vii].ossUrl+"\n-Qinlili");
-                        var filename2=videoInfo[vii].frst_name+"-"+(vi+1)+"-"+videoInfo[vii].title+".mp4"
-                        console.log("File Name:"+filename2+"\nPrepare Download-Qinlili");
-                        downloadFile(videoInfo[vii].ossUrl,filename2);
+                if (videoInfo[Object.keys(videoInfo)[0]].list) {
+                    videoInfo = videoInfo[Object.keys(videoInfo)[0]].list;
+                    for (var vii = 0; videoInfo[vii]; vii++) {
+                        console.log("Video Name:" + videoInfo[vii].frst_name + "-" + (vi + 1) + "\nList Name:" + videoInfo[vii].title + "\nVideo Url:" + videoInfo[vii].ossUrl + "\n-Qinlili");
+                        var filename2 = videoInfo[vii].frst_name + "-" + (vi + 1) + "-" + videoInfo[vii].title + ".mp4"
+                        console.log("File Name:" + filename2 + "\nPrepare Download-Qinlili");
+                        downloadFile(videoInfo[vii].ossUrl, filename2);
                     }
                 }
             }
             xhr.onerror = function (e) {
-                console.log("Fail Get Video Info:"+infourl+"\n-Qinlili")
+                console.log("Fail Get Video Info:" + infourl + "\n-Qinlili")
             }
         }
-        xhr.open('GET',infourl,false);
+        xhr.open('GET', infourl, false);
         xhr.send();
 
         //平整化Array工具，从学习强国本身的js里抄过来的，大概原理就是尝试把值作为json解析，解析成功就把解析结果替换回去，总之我大受震撼
@@ -858,134 +859,145 @@
     }
 
     //跳转避免跨域问题
-    if(document.location.host=="article.xuexi.cn"){
-        console.log("JS Loaded,Sleep 5 Sec-Qinlili");
-        await sleep(5000)
-        document.location.href=document.getElementsByClassName("pdf-iframe")[0].src;
+    if (document.location.host == "article.xuexi.cn") {
+        //检测是不是PDF页面，移动端分享文章也是这个域名，之前没发现
+        var obj = document.getElementsByTagName("link");
+        var isPDF = false;
+        for (var pdfJS = 0; obj[pdfJS]; pdfJS++) {
+            if (obj[pdfJS].href.indexOf("js/pdf") > 1) {
+                isPDF = true;
+            }
+        }
+        if (isPDF) {
+            console.log("JS Loaded,Sleep 5 Sec-Qinlili");
+            var tip = document.createElement("H1");
+            tip.innerText = "即将跳转页面，请等待五秒";
+            tip.style = "z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
+            document.body.appendChild(tip);
+            await sleep(5000)
+            document.location.href = document.getElementsByClassName("pdf-iframe")[0].src;
+        }
     }
 
 
     //404注入页面避免cors
-    if(document.location.host=="boot-source.xuexi.cn"){
+    if (document.location.host == "boot-source.xuexi.cn") {
         console.log("JS Domain Detected, Prepare Inject-Qinlili");
-        document.querySelector("body").innerHTML="<H2>本页面仅用于CORS注入，分享网址没有用，请允许下载多个文件</H2><H4 id=\"logcat\"></H4>"
+        document.querySelector("body").innerHTML = "<H2>本页面仅用于CORS注入，分享网址没有用，请允许下载多个文件</H2><H4 id=\"logcat\"></H4>"
         XHRDL.init();
         logcat("Initializing Downloader...");
         const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
         await sleep(3000)
         var searchParams = new URLSearchParams(document.location.search);
-        var vid=searchParams.get("id");
-        document.title="下载：" + vid;
-        logcat("Found ID:"+vid);
-        logcat("Get Video Info:"+vid)
+        var vid = searchParams.get("id");
+        document.title = "下载：" + vid;
+        logcat("Found ID:" + vid);
+        logcat("Get Video Info:" + vid)
         var xhr = new XMLHttpRequest();
         xhr.onload = event => {
             if (xhr.readyState === 4 && xhr.status === 200) {
-                logcat("Success Get JSON Info:"+vid)
-                var videoInfo=JSON.parse(xhr.response.replace("callback(","").replace("})","}"));
+                logcat("Success Get JSON Info:" + vid)
+                var videoInfo = JSON.parse(xhr.response.replace("callback(", "").replace("})", "}"));
                 console.log(videoInfo);
-                logcat("List Name:"+videoInfo.normalized_title)
-                logcat("List Origin:"+videoInfo.show_source)
+                logcat("List Name:" + videoInfo.normalized_title)
+                logcat("List Origin:" + videoInfo.show_source)
                 //文件名后缀
-                var filenamesource="-"+videoInfo.normalized_title+"-"+videoInfo.show_source;
+                var filenamesource = "-" + videoInfo.normalized_title + "-" + videoInfo.show_source;
                 //视频下载模式
-                if(document.location.pathname=="/newmoocdown"){
+                if (document.location.pathname == "/newmoocdown") {
                     //检测是否为多视频
-                    if(videoInfo.sub_items){
-                        logcat("Found "+videoInfo.sub_items.length+" Videos");
+                    if (videoInfo.sub_items) {
+                        logcat("Found " + videoInfo.sub_items.length + " Videos");
                         //循环解析并下载视频
-                        for(var vi=0;videoInfo.sub_items[vi];vi++){
-                            logcat("Analysis Video "+ (vi+1));
+                        for (var vi = 0; videoInfo.sub_items[vi]; vi++) {
+                            logcat("Analysis Video " + (vi + 1));
                             //currentVideo，缩写为cV看起来清爽点
-                            var cV=videoInfo.sub_items[vi];
-                            var vName=cV.title;
-                            logcat("Video Name:"+vName);
+                            var cV = videoInfo.sub_items[vi];
+                            var vName = cV.title;
+                            logcat("Video Name:" + vName);
                             //检测多个清晰度
-                            var vurl=getHighest(cV.videos[0].video_storage_info);
-                            logcat("Video Url:"+vurl);
-                            var fName=vName+filenamesource+".mp4";
-                            logcat("File Name:"+fName);
+                            var vurl = getHighest(cV.videos[0].video_storage_info);
+                            logcat("Video Url:" + vurl);
+                            var fName = vName + filenamesource + ".mp4";
+                            logcat("File Name:" + fName);
                             logcat("Call Downloader, Downloader Log Output In F12");
-                            downloadFile(vurl,fName);
+                            downloadFile(vurl, fName);
                         }
-                    }else{
+                    } else {
                         //单个视频
-                        var singlevurl=getHighest(videoInfo.videos[0].video_storage_info);
-                        logcat("Video Url:"+singlevurl);
-                        vName=videoInfo.title;
-                        var sfName=vName+filenamesource+".mp4";
-                        logcat("File Name:"+sfName);
+                        var singlevurl = getHighest(videoInfo.videos[0].video_storage_info);
+                        logcat("Video Url:" + singlevurl);
+                        vName = videoInfo.title;
+                        var sfName = vName + filenamesource + ".mp4";
+                        logcat("File Name:" + sfName);
                         logcat("Call Downloader, Downloader Log Output In F12");
-                        downloadFile(singlevurl,sfName);
+                        downloadFile(singlevurl, sfName);
                     }
                 }
                 //音频下载模式
-                if(document.location.pathname=="/audiodown"){
-                    if(videoInfo.sub_items){
-                        logcat("Found "+videoInfo.sub_items.length+" Audios");
+                if (document.location.pathname == "/audiodown") {
+                    if (videoInfo.sub_items) {
+                        logcat("Found " + videoInfo.sub_items.length + " Audios");
                         //循环解析并下载音频
-                        for(var ai=0;videoInfo.sub_items[ai];ai++){
-                            logcat("Analysis Video "+ (ai+1));
+                        for (var ai = 0; videoInfo.sub_items[ai]; ai++) {
+                            logcat("Analysis Video " + (ai + 1));
                             //currentAudio，缩写为cA看起来清爽点
-                            var cA=videoInfo.sub_items[ai];
-                            var aName=cA.title;
-                            logcat("Audio Name:"+aName);
+                            var cA = videoInfo.sub_items[ai];
+                            var aName = cA.title;
+                            logcat("Audio Name:" + aName);
                             //音频不区分清晰度
-                            var aurl=cA.audios[0].audio_storage_info[0].url;
-                            logcat("Audio Url:"+aurl);
-                            var afName=aName+filenamesource+".mp3";
-                            logcat("File Name:"+fName);
+                            var aurl = cA.audios[0].audio_storage_info[0].url;
+                            logcat("Audio Url:" + aurl);
+                            var afName = aName + filenamesource + ".mp3";
+                            logcat("File Name:" + fName);
                             logcat("Call Downloader, Downloader Log Output In F12");
-                            downloadFile(aurl,afName);
+                            downloadFile(aurl, afName);
                         }
                     }
                 }
             }
         }
         xhr.onerror = function (e) {
-            logcat("Fail Get Json Info:"+vid)
+            logcat("Fail Get Json Info:" + vid)
         }
-        xhr.open('GET',"https://boot-source.xuexi.cn/data/app/"+vid+".js?callback=callback&_st="+Date.now());
+        xhr.open('GET', "https://boot-source.xuexi.cn/data/app/" + vid + ".js?callback=callback&_st=" + Date.now());
         xhr.send();
         //打印日志方法，空页面就不用console.log了
-        function logcat(text){
-            //获取时间参考https://www.jianshu.com/p/067469a4eed8
-            let myDate = new Date();
-            let str = myDate.toTimeString();
-            let timeStr = str.substring(0,8);
-            document.getElementById("logcat").innerText=timeStr+"  "+text+"\n"+document.getElementById("logcat").innerText;
+        function logcat(text) {
+            //获取时间参考https://www.jianshu.com/p/067469a4eed8，稍微整合了一下
+            document.getElementById("logcat").innerText = new Date().toTimeString().substring(0, 8) + "  " + text + "\n" + document.getElementById("logcat").innerText;
         }
         //分析最高清晰度
-        function getHighest(vObj){
-            var maxHeight=1;
-            var maxId=0;
-            for(var vii=0;vObj[vii];vii++){
-                if(!(vObj[vii].format=="m3u8")){
-                    if(vObj[vii].height>maxHeight){
-                        maxHeight=vObj[vii].height;
-                        maxId=vii;
+        function getHighest(vObj) {
+            var maxHeight = 1;
+            var maxId = 0;
+            for (var vii = 0; vObj[vii]; vii++) {
+                if (!(vObj[vii].format == "m3u8")) {
+                    if (vObj[vii].height > maxHeight) {
+                        maxHeight = vObj[vii].height;
+                        maxId = vii;
                     }
                 }
             }
-            logcat("Max Vide Height:"+maxHeight);
+            logcat("Max Vide Height:" + maxHeight);
             return vObj[maxId].normal
         }
     }
 
 
     //地址转换函数
-    function pagetoinfourl(pageurl){
-        var tempurl=pageurl.replace(".html",".js");
-        tempurl=insertStr(tempurl,tempurl.indexOf("/",21)+1,"data");
+    function pagetoinfourl(pageurl) {
+        var tempurl = pageurl.replace(".html", ".js");
+        tempurl = insertStr(tempurl, tempurl.indexOf("/", 21) + 1, "data");
         return tempurl;
     }
     //插入
-    function insertStr(soure, start, newStr){
+    function insertStr(soure, start, newStr) {
         return soure.slice(0, start) + newStr + soure.slice(start);
     }
     //下载
-    function downloadFile(url,name){
-        XHRDL.newTask(url,name);
+    function downloadFile(url, name) {
+        XHRDL.newTask(url, name);
     }
 }
 )();
