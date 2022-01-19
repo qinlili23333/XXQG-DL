@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.0.4
+// @version      1.0.5
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -40,7 +40,7 @@
     //请访问此地址获取跨源服务器https://github.com/Rob--W/cors-anywhere
     //Clone到本地后运行npm install，然后运行node server.js，即可运行在默认地址和端口上
     var corsServer = "http://localhost:8080/";
-    if (document.location.host == "preview-pdf.xuexi.cn" && (document.location.search.indexOf("boot-video.xuexi.cn") > 1) && (window.self === window.top) && confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。")) {
+    if (document.location.host == "preview-pdf.xuexi.cn" && (document.location.search.indexOf("boot-video.xuexi.cn") > 1) && (window.self === window.top) && confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。\n不知道跨源服务器是什么的话打开脚本源码看注释")) {
         var valueProp = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
         Object.defineProperty(Image.prototype, 'src', {
             set: function (newimgValue) {
@@ -54,13 +54,14 @@
     }
     //iframe页面处理
     if (!(window.self === window.top)) {
-        document.documentElement.style = "background:none transparent !important;background-color:transparent !important;";
-        document.body.style = "background:none transparent !important;background-color:transparent !important;";
+        var transparentStyle = "background:none transparent !important;";
+        document.documentElement.style = transparentStyle;
+        document.body.style = transparentStyle;
         if (document.location.href.indexOf("login.xuexi.cn/login/xuexiWeb?") > 1) {
             document.getElementsByClassName("login_content")[0].style.background = "none"
         };
         if (document.location.href.indexOf("static.xuexi.cn/search/online/index.html") > 1) {
-            document.getElementById("root").style.background = "none";
+            document.getElementById("root").style.background = transparentStyle;
             if ((window.self.innerWidth > window.self.innerHeight) && window.self.innerWidth > 1000) {
                 document.getElementsByClassName("search-content")[0].style = "padding-left:20px;padding-right:20px;"
             }
@@ -471,7 +472,7 @@
                 scBtn.addEventListener("click", async function (e) {
                     var searchFrame = document.createElement("iframe");
                     searchFrame.frameBorder = 0;
-                    searchFrame.style = "z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
+                    searchFrame.style = "padding:100%;z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
                     document.body.appendChild(searchFrame);
                     searchFrame.src = "https://static.xuexi.cn/search/online/index.html";
                     var clsBtn = document.createElement("img");
@@ -479,6 +480,7 @@
                     clsBtn.className = "barBtn"
                     clsBtn.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==";
                     document.body.appendChild(clsBtn);
+                    searchFrame.addEventListener("load",async function(){await sleep(150);searchFrame.style.padding="0px";});
                     clsBtn.onclick = function () {
                         document.body.removeChild(searchFrame);
                         document.body.removeChild(clsBtn);
@@ -506,6 +508,7 @@
                                             }
                                             targetUrl += op + key + '=' + value;
                                         }
+                                        searchFrame.style.padding="100%";
                                         searchFrame.src = targetUrl;
                                         break;
                                     default:
@@ -537,8 +540,9 @@
                     var loginFrame = document.createElement("iframe");
                     loginFrame.frameBorder = 0;
                     loginFrame.scrolling = "no";
-                    loginFrame.style = "z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
+                    loginFrame.style = "padding:100%;z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
                     document.body.appendChild(loginFrame);
+                    loginFrame.addEventListener("load",async function(){await sleep(250);loginFrame.style.padding="0px";});
                     var refreshBtn = SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNDhweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iNDhweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNy42NSA2LjM1QzE2LjIgNC45IDE0LjIxIDQgMTIgNGMtNC40MiAwLTcuOTkgMy41OC03Ljk5IDhzMy41NyA4IDcuOTkgOGMzLjczIDAgNi44NC0yLjU1IDcuNzMtNmgtMi4wOGMtLjgyIDIuMzMtMy4wNCA0LTUuNjUgNC0zLjMxIDAtNi0yLjY5LTYtNnMyLjY5LTYgNi02YzEuNjYgMCAzLjE0LjY5IDQuMjIgMS43OEwxMyAxMWg3VjRsLTIuMzUgMi4zNXoiLz48L3N2Zz4=")
                     refreshBtn.onclick = function () {
                         scanLogin();
@@ -573,6 +577,7 @@
                                 SakiProgress.setPercent(65);
                                 SakiProgress.setText("等待扫码...");
                             }
+                            loginFrame.style.padding="100%";
                             loginFrame.src = "https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state=" + token + "&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
                             window.addEventListener("message", function receiveMessage(event) {
                                 event.preventDefault();
