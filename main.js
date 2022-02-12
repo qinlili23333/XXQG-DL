@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.1.0
+// @version      1.1.1
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -43,7 +43,7 @@
     if (document.location.host == "preview-pdf.xuexi.cn" && (document.location.search.indexOf("boot-video.xuexi.cn") > 1) && (window.self === window.top) && confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。\n不知道跨源服务器是什么的话打开脚本源码看注释")) {
         var valueProp = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
         Object.defineProperty(Image.prototype, 'src', {
-            set: function (newimgValue) {
+            set: newimgValue => {
                 if (!newimgValue.startsWith("data:")) {
                     newimgValue = corsServer + newimgValue;
                 }
@@ -68,7 +68,7 @@
         };
     }
     //干掉日志
-    (function (open) {
+    (open=> {
         XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
             if (url.startsWith("https://iflow-api.xuexi.cn/logflow/api/v1/pclog") || url.startsWith("https://arms-retcode.aliyuncs.com/r.png")) {
                 console.log("Rejected Log XHR! " + url + " -Qinlili")
@@ -77,20 +77,20 @@
             open.call(this, method, url, async, user, pass);
         };
     })(XMLHttpRequest.prototype.open);
-    var originFetch=fetch;
-    window.fetch=function(url,options){
+    var originFetch = fetch;
+    window.fetch = (url, options) => {
         if (url.startsWith("https://iflow-api.xuexi.cn/logflow/api/v1/pclog") || url.startsWith("https://arms-retcode.aliyuncs.com/r.png")) {
             console.log("Rejected Log Fetch! " + url + " -Qinlili")
             url = "data:text,null"
         }
-        return originFetch(url,options);
+        return originFetch(url, options);
     }
     //干掉PDF水印
     if (document.location.host == "preview-pdf.xuexi.cn") {
-        CanvasRenderingContext2D.prototype.fillText = function () { }
+        CanvasRenderingContext2D.prototype.fillText = () => { }
     }
     //共享库
-    var SakiProgress = {
+    const SakiProgress = {
         isLoaded: false,
         progres: false,
         pgDiv: false,
@@ -249,7 +249,7 @@
             }
         }
     }
-    var XHRDL = {
+    const XHRDL = {
         isLoaded: false,
         dlList: [],
         listBtn: false,
@@ -469,7 +469,7 @@
                 scBtn = document.createElement("a");
                 scBtn.className = "icon search-icon";
                 scPrt.appendChild(scBtn);
-                scBtn.addEventListener("click", async e=> {
+                scBtn.addEventListener("click", async e => {
                     var searchFrame = document.createElement("iframe");
                     searchFrame.frameBorder = 0;
                     searchFrame.style = "padding:100%;z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
@@ -480,8 +480,8 @@
                     clsBtn.className = "barBtn"
                     clsBtn.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==";
                     document.body.appendChild(clsBtn);
-                    searchFrame.addEventListener("load",async function(){await sleep(150);searchFrame.style.padding="0px";});
-                    clsBtn.onclick = function () {
+                    searchFrame.addEventListener("load", async () => { await sleep(150); searchFrame.style.padding = "0px"; });
+                    clsBtn.onclick = () => {
                         document.body.removeChild(searchFrame);
                         document.body.removeChild(clsBtn);
                         window.removeEventListener("message", msg, false);
@@ -508,7 +508,7 @@
                                             }
                                             targetUrl += op + key + '=' + value;
                                         }
-                                        searchFrame.style.padding="100%";
+                                        searchFrame.style.padding = "100%";
                                         searchFrame.src = targetUrl;
                                         break;
                                     default:
@@ -530,7 +530,7 @@
                 dlBtn = document.createElement("a");
                 dlBtn.className = "icon login-icon";
                 dlPrt.appendChild(dlBtn);
-                dlBtn.addEventListener("click", async function (e) {
+                dlBtn.addEventListener("click", async e => {
                     e.preventDefault();
                     SakiProgress.showDiv();
                     SakiProgress.setPercent(5);
@@ -542,12 +542,12 @@
                     loginFrame.scrolling = "no";
                     loginFrame.style = "padding:100%;z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:32px;height:100%;left:0px;right:0px;top:0px;";
                     document.body.appendChild(loginFrame);
-                    loginFrame.addEventListener("load",async function(){await sleep(250);loginFrame.style.padding="0px";});
+                    loginFrame.addEventListener("load", async function () { await sleep(250); loginFrame.style.padding = "0px"; });
                     var refreshBtn = SakiProgress.addBtn("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNDhweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iNDhweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik0xNy42NSA2LjM1QzE2LjIgNC45IDE0LjIxIDQgMTIgNGMtNC40MiAwLTcuOTkgMy41OC03Ljk5IDhzMy41NyA4IDcuOTkgOGMzLjczIDAgNi44NC0yLjU1IDcuNzMtNmgtMi4wOGMtLjgyIDIuMzMtMy4wNCA0LTUuNjUgNC0zLjMxIDAtNi0yLjY5LTYtNnMyLjY5LTYgNi02YzEuNjYgMCAzLjE0LjY5IDQuMjIgMS43OEwxMyAxMWg3VjRsLTIuMzUgMi4zNXoiLz48L3N2Zz4=")
-                    refreshBtn.onclick = function () {
+                    refreshBtn.onclick = () => {
                         scanLogin();
                     }
-                    closeBtn.onclick = function () {
+                    closeBtn.onclick = () => {
                         document.body.removeChild(loginFrame);
                         SakiProgress.removeBtn(closeBtn);
                         SakiProgress.removeBtn(refreshBtn);
@@ -573,13 +573,13 @@
                             token = tokenText.data.sign;
                             SakiProgress.setPercent(40);
                             SakiProgress.setText("口令获取成功，加载登录页面...");
-                            loginFrame.onload = function () {
+                            loginFrame.onload = () => {
                                 SakiProgress.setPercent(65);
                                 SakiProgress.setText("等待扫码...");
                             }
-                            loginFrame.style.padding="100%";
+                            loginFrame.style.padding = "100%";
                             loginFrame.src = "https://login.xuexi.cn/login/xuexiWeb?appid=dingoankubyrfkttorhpou&goto=https%3A%2F%2Foa.xuexi.cn&type=1&state=" + token + "&check_login=https%3A%2F%2Fpc-api.xuexi.cn"
-                            window.addEventListener("message", function receiveMessage(event) {
+                            window.addEventListener("message", event => {
                                 event.preventDefault();
                                 console.log(event);
                                 if (event.data.success == true) {
@@ -607,7 +607,7 @@
                 console.log("Old Mooc List Detected " + document.location.pathname + "-Qinlili");
                 detected = true;
                 dlText.innerText = "页面类型:旧慕课列表，支持全部批量下载，请开启网站自动下载权限";
-                downloadBtn.onclick = function () {
+                downloadBtn.onclick = () => {
                     OldMoocListDL();
                 }
             }
@@ -618,7 +618,7 @@
                     console.log("Old Video Player Detected " + document.location.pathname + "-Qinlili");
                     detected = true;
                     dlText.innerText = "页面类型:旧视频播放单页，支持全部批量下载，请开启网站自动下载权限";
-                    downloadBtn.onclick = function () {
+                    downloadBtn.onclick = () => {
                         OldMoocVideoDL();
                     }
                 }
@@ -627,7 +627,7 @@
                     console.log("New Video Player Detected " + document.location.pathname + "-Qinlili");
                     detected = true;
                     dlText.innerText = "页面类型:新视频总，支持全部批量下载最高清晰度，需要打开新标签页下载";
-                    downloadBtn.onclick = function () {
+                    downloadBtn.onclick = () => {
                         NewMoocPageDL();
                     }
                 }
@@ -637,7 +637,7 @@
                 console.log("Audio Detected " + document.location.pathname + "-Qinlili");
                 detected = true;
                 dlText.innerText = "页面类型:音频，支持全部批量下载，需要打开新标签页下载";
-                downloadBtn.onclick = function () {
+                downloadBtn.onclick = () => {
                     AudioDL();
                 }
             }
@@ -655,7 +655,7 @@
             if (document.location.host == "preview-pdf.xuexi.cn") {
                 detected = true;
                 dlText.innerText = "页面类型:电子书，支持打包下载";
-                downloadBtn.onclick = function () {
+                downloadBtn.onclick = () => {
                     PDFDL();
                 }
             }
@@ -696,7 +696,7 @@
             }
             async function PDFDL() {
                 //webp压缩用处和顶碗人一样大，所以换成灰度压缩
-                let enableGreyCompress=confirm("是否启用灰度压缩？\n适合保存以黑白文本内容的书籍或用于Kindle等墨水屏阅读，可大幅削减文件体积，需额外消耗压缩时间。\n根据琴梨梨自己的测试可削减大约44%大小，可用于解决Chrome无法爬512M以上书的问题。")
+                let enableGreyCompress = confirm("是否启用灰度压缩？\n适合保存以黑白文本内容的书籍或用于Kindle等墨水屏阅读，可大幅削减文件体积，需额外消耗压缩时间。\n根据琴梨梨自己的测试可削减大约44%大小，可用于解决Chrome无法爬512M以上书的问题。")
                 SakiProgress.showDiv();
                 SakiProgress.setText("正在加载依赖...");
                 await sleep(100)
@@ -751,14 +751,14 @@
                 var val = document.getElementsByTagName("input")[0];
                 function waitPageChange() {
                     return new Promise(resolve => {
-                        onPageChange = function () {
+                        onPageChange = () => {
                             resolve();
                         }
                     });
                 }
                 //加载完成后页码显示才会变化，监听页码显示来等待加载
                 Object.defineProperty(val, 'value', {
-                    set: newValue=> {
+                    set: newValue => {
                         var valueProp = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
                         valueProp.set.call(val, newValue);
                         onPageChange();
@@ -774,12 +774,12 @@
                     await sleep(100)
                     //不管有几页，把当前全部canvas保存再说
                     for (var i = 0; document.getElementsByTagName("canvas")[i]; i++) {
-                        if(enableGreyCompress){
+                        if (enableGreyCompress) {
                             //灰度压缩
-                            let cnv=document.getElementsByTagName("canvas")[i];
+                            let cnv = document.getElementsByTagName("canvas")[i];
                             let cnx = cnv.getContext('2d');
-                            let width=cnv.width;
-                            let height=cnv.height;
+                            let width = cnv.width;
+                            let height = cnv.height;
                             var imgPixels = cnx.getImageData(0, 0, width, height);
                             for (var y = 0; y < height; y++) {
                                 for (var x = 0; x < width; x++) {
@@ -792,7 +792,7 @@
                             }
                             cnx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
                             PDFfile.addImage(document.getElementsByTagName("canvas")[i], null, 0, 0, wP, hP, null, null)
-                        }else{
+                        } else {
                             PDFfile.addImage(document.getElementsByTagName("canvas")[i], null, 0, 0, wP, hP, null, null)
                         }
                         PDFfile.addPage();
@@ -800,7 +800,7 @@
                         console.log("Saved One Page!-Qinlili");
                     }
                     //虽然不知道为什么加了延迟半秒就不会卡住，但既然能用管他为什么呢
-                    setTimeout( ()=> { document.getElementsByClassName("ctrl-icon")[3].parentElement.click(); }, 500)
+                    setTimeout(() => { document.getElementsByClassName("ctrl-icon")[3].parentElement.click(); }, 500)
                     //显示的正在加载的页面可能比实际加载页面小一页，但估计1919810个用户里也没一个意识到，不影响保存效果这种细节就不管了，问就是爷懒的写
                     SakiProgress.setText("正在等待加载第" + (page + 1) + "页...");
                     console.log("Waiting For Loading...-Qinlili");
@@ -850,7 +850,7 @@
                     }
                 }
             }
-            xhr.onerror = function (e) {
+            xhr.onerror = () => {
                 console.log("Fail Get Video Info:" + infourl + "\n-Qinlili")
             }
         }
@@ -922,7 +922,6 @@
         document.querySelector("body").innerHTML = "<H2>本页面仅用于CORS注入，分享网址没有用，请允许下载多个文件</H2><H4 id=\"logcat\"></H4>"
         XHRDL.init();
         logcat("Initializing Downloader...");
-        const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
         await sleep(3000)
         var searchParams = new URLSearchParams(document.location.search);
         var vid = searchParams.get("id");
@@ -993,7 +992,7 @@
                 }
             }
         }
-        xhr.onerror = function (e) {
+        xhr.onerror = () => {
             logcat("Fail Get Json Info:" + vid)
         }
         xhr.open('GET', "https://boot-source.xuexi.cn/data/app/" + vid + ".js?callback=callback&_st=" + Date.now());
