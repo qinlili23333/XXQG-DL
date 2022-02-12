@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.0.5
+// @version      1.1.0
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -442,7 +442,7 @@
     }
 
 
-    const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+    const sleep = delay => new Promise(resolve => setTimeout(resolve, delay))
     //主站检测
     if (document.location.host == "www.xuexi.cn" || document.location.host == "preview-pdf.xuexi.cn") {
         console.log("JS Loaded,Sleep 3 Sec-Qinlili");
@@ -469,7 +469,7 @@
                 scBtn = document.createElement("a");
                 scBtn.className = "icon search-icon";
                 scPrt.appendChild(scBtn);
-                scBtn.addEventListener("click", async function (e) {
+                scBtn.addEventListener("click", async e=> {
                     var searchFrame = document.createElement("iframe");
                     searchFrame.frameBorder = 0;
                     searchFrame.style = "padding:100%;z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
@@ -695,14 +695,8 @@
                 window.open(dlurl, "_blank");
             }
             async function PDFDL() {
-                var compress = null;
-                var compressMode = "FAST";
-                if (confirm("是否开启WEBP压缩？会延长生成时间但缩小文件大小")) {
-                    compress = "WEBP"
-                    if (confirm("是否使用深度压缩模式？会大幅延长生成时间但只能小幅缩小文件大小")) {
-                        compressMode = "SLOW"
-                    }
-                }
+                //webp压缩用处和顶碗人一样大，所以换成灰度压缩
+                let enableGreyCompress=confirm("是否启用灰度压缩？\n适合保存以黑白文本内容的书籍或用于Kindle等墨水屏阅读，可大幅削减文件体积，需额外消耗压缩时间。\n根据琴梨梨自己的测试可削减大约44%大小，可用于解决Chrome无法爬512M以上书的问题。")
                 SakiProgress.showDiv();
                 SakiProgress.setText("正在加载依赖...");
                 await sleep(100)
@@ -713,6 +707,7 @@
                     console.log("jsPDF Ready!")
                 } catch {
                     console.error("jsPDF Not Ready!")
+                    alert("jsPDF加载失败，请检查网络并尝试重新安装脚本！")
                 }
                 SakiProgress.setText("正在调整尺寸...");
                 SakiProgress.setPercent(2);
@@ -763,7 +758,7 @@
                 }
                 //加载完成后页码显示才会变化，监听页码显示来等待加载
                 Object.defineProperty(val, 'value', {
-                    set: function (newValue) {
+                    set: newValue=> {
                         var valueProp = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
                         valueProp.set.call(val, newValue);
                         onPageChange();
@@ -779,13 +774,33 @@
                     await sleep(100)
                     //不管有几页，把当前全部canvas保存再说
                     for (var i = 0; document.getElementsByTagName("canvas")[i]; i++) {
-                        PDFfile.addImage(document.getElementsByTagName("canvas")[i], compress, 0, 0, wP, hP, null, compressMode)
+                        if(enableGreyCompress){
+                            //灰度压缩
+                            let cnv=document.getElementsByTagName("canvas")[i];
+                            let cnx = cnv.getContext('2d');
+                            let width=cnv.width;
+                            let height=cnv.height;
+                            var imgPixels = cnx.getImageData(0, 0, width, height);
+                            for (var y = 0; y < height; y++) {
+                                for (var x = 0; x < width; x++) {
+                                    let i = (y * 4) * width + x * 4;
+                                    var avg = (imgPixels.data[i] + imgPixels.data[i + 1] + imgPixels.data[i + 2]) / 3;
+                                    imgPixels.data[i] = avg;
+                                    imgPixels.data[i + 1] = avg;
+                                    imgPixels.data[i + 2] = avg;
+                                }
+                            }
+                            cnx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
+                            PDFfile.addImage(document.getElementsByTagName("canvas")[i], null, 0, 0, wP, hP, null, null)
+                        }else{
+                            PDFfile.addImage(document.getElementsByTagName("canvas")[i], null, 0, 0, wP, hP, null, null)
+                        }
                         PDFfile.addPage();
                         page++
                         console.log("Saved One Page!-Qinlili");
                     }
                     //虽然不知道为什么加了延迟半秒就不会卡住，但既然能用管他为什么呢
-                    setTimeout(function () { document.getElementsByClassName("ctrl-icon")[3].parentElement.click(); }, 500)
+                    setTimeout( ()=> { document.getElementsByClassName("ctrl-icon")[3].parentElement.click(); }, 500)
                     //显示的正在加载的页面可能比实际加载页面小一页，但估计1919810个用户里也没一个意识到，不影响保存效果这种细节就不管了，问就是爷懒的写
                     SakiProgress.setText("正在等待加载第" + (page + 1) + "页...");
                     console.log("Waiting For Loading...-Qinlili");
