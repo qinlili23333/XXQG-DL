@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.1.2
+// @version      1.1.3
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -712,11 +712,13 @@
                 SakiProgress.setText("正在调整尺寸...");
                 SakiProgress.setPercent(2);
                 await sleep(100)
-                //按钮循环点击得稍微延迟一点否则可能卡死
-                //放大到最大保障清晰度
-                for (; document.getElementsByClassName("ctrl-icon")[0].className.animVal.indexOf("disabled") < 0;) {
-                    document.getElementsByClassName("ctrl-icon")[0].parentElement.click()
-                    await sleep(50)
+                if(confirm("是否开启高清模式？请观察原书清晰度，若原书清晰度较高建议开启。\n对超过300页的书开启可能导致无法生成文件。")){
+                    //按钮循环点击得稍微延迟一点否则可能卡死
+                    //放大到最大保障清晰度
+                    for (; document.getElementsByClassName("ctrl-icon")[0].className.animVal.indexOf("disabled") < 0;) {
+                        document.getElementsByClassName("ctrl-icon")[0].parentElement.click()
+                        await sleep(50)
+                    }
                 }
                 SakiProgress.setText("正在回到第一页...");
                 SakiProgress.setPercent(4);
@@ -793,7 +795,7 @@
                             cnx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
 
                         }
-                        PDFfile.addImage(document.getElementsByTagName("canvas")[i], "WEBP", 0, 0, wP, hP, null, "SLOW")
+                        PDFfile.addImage(document.getElementsByTagName("canvas")[i], "WEBP", 0, 0, wP, hP, null, "FAST")
                         PDFfile.addPage();
                         page++
                         console.log("Saved One Page!-Qinlili");
