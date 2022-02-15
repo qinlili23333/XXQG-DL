@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.1.1
+// @version      1.1.2
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -16,7 +16,7 @@
 // @supportURL   https://github.com/qinlili23333/XXQG-DL
 // @grant        none
 // @run-at       document-end
-// @require      https://cdn.jsdelivr.net/npm/jspdf@2.4.0/dist/jspdf.umd.min.js
+// @require      https://lib.baomitu.com/jspdf/2.5.1/jspdf.umd.min.js
 // @license      Anti996License
 // ==/UserScript==
 
@@ -791,10 +791,9 @@
                                 }
                             }
                             cnx.putImageData(imgPixels, 0, 0, 0, 0, imgPixels.width, imgPixels.height);
-                            PDFfile.addImage(document.getElementsByTagName("canvas")[i], null, 0, 0, wP, hP, null, null)
-                        } else {
-                            PDFfile.addImage(document.getElementsByTagName("canvas")[i], null, 0, 0, wP, hP, null, null)
+
                         }
+                        PDFfile.addImage(document.getElementsByTagName("canvas")[i], "WEBP", 0, 0, wP, hP, null, "SLOW")
                         PDFfile.addPage();
                         page++
                         console.log("Saved One Page!-Qinlili");
