@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.1.3
+// @version      1.1.4
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -43,7 +43,7 @@
     if (document.location.host == "preview-pdf.xuexi.cn" && (document.location.search.indexOf("boot-video.xuexi.cn") > 1) && (window.self === window.top) && confirm("该地址可能需要跨源服务器下载。启用跨源服务器吗？请在确认跨源服务器已启动之后点击确定。\n不知道跨源服务器是什么的话打开脚本源码看注释")) {
         var valueProp = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
         Object.defineProperty(Image.prototype, 'src', {
-            set: newimgValue => {
+            set: function(newimgValue){
                 if (!newimgValue.startsWith("data:")) {
                     newimgValue = corsServer + newimgValue;
                 }
