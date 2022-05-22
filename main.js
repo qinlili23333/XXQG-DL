@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.1.5
+// @version      1.1.6
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -772,11 +772,7 @@
                 //循环保存
                 var page = 1;
                 var totalPage = parseInt(document.getElementsByClassName("total")[0].innerText.substr(1));
-                for (; document.getElementsByClassName("ctrl-icon")[3].className.animVal.indexOf("disabled") < 0;) {
-                    SakiProgress.setText("正在保存第" + page + "页...");
-                    SakiProgress.setPercent(10 + 80 * (page / totalPage));
-                    console.log("Work Current Page:" + page + "...-Qinlili");
-                    await sleep(100)
+                const saveCurrent=()=>{
                     //不管有几页，把当前全部canvas保存再说
                     for (var i = 0; document.getElementsByTagName("canvas")[i]; i++) {
                         if (enableGreyCompress) {
@@ -803,13 +799,24 @@
                         page++
                         console.log("Saved One Page!-Qinlili");
                     }
+                }
+                for (; document.getElementsByClassName("ctrl-icon")[3].className.animVal.indexOf("disabled") < 0;) {
+                    SakiProgress.setText("正在保存第" + page + "页...");
+                    SakiProgress.setPercent(10 + 80 * (page / totalPage));
+                    console.log("Work Current Page:" + page + "...-Qinlili");
+                    await sleep(100)
+                    saveCurrent();
                     //虽然不知道为什么加了延迟半秒就不会卡住，但既然能用管他为什么呢
                     setTimeout(() => { document.getElementsByClassName("ctrl-icon")[3].parentElement.click(); }, 500)
                     //显示的正在加载的页面可能比实际加载页面小一页，但估计1919810个用户里也没一个意识到，不影响保存效果这种细节就不管了，问就是爷懒的写
                     SakiProgress.setText("正在等待加载第" + (page + 1) + "页...");
                     console.log("Waiting For Loading...-Qinlili");
                     await waitPageChange();
-                }
+                };
+                saveCurrent();
+                PDFfile.setFontSize(40);
+                PDFfile.text('Powered By Qinlili',35, 65);
+                PDFfile.textWithLink('https://greasyfork.org/zh-CN/scripts/429991',35, 25,{align: 'center', url: 'https://greasyfork.org/zh-CN/scripts/429991'});
                 //生成文件导出
                 SakiProgress.setText("正在导出文件...");
                 SakiProgress.setPercent(90);
