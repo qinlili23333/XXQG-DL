@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习强国梨酱小帮手
 // @namespace    https://qinlili.bid/
-// @version      1.1.6
+// @version      1.1.7
 // @description  页面内登录/搜索+视频/音频/电子书一键批量下载+拦截Log请求+电子书去水印
 // @author       琴梨梨
 // @match        *://www.xuexi.cn/*
@@ -445,7 +445,24 @@
     }
 
 
-    const sleep = delay => new Promise(resolve => setTimeout(resolve, delay))
+    const sleep = delay => new Promise(resolve => setTimeout(resolve, delay));
+    const openFrame=url=>{
+        var searchFrame = document.createElement("iframe");
+        searchFrame.frameBorder = 0;
+        searchFrame.style = "padding:100%;z-index:9999;position:fixed;backdrop-filter: blur(10px) brightness(100%);background-color: rgba(255, 255, 255, .6);width:100%;margin-top:0px;height:100%;left:0px;right:0px;top:0px;";
+        document.body.appendChild(searchFrame);
+        searchFrame.src = url;
+        var clsBtn = document.createElement("img");
+        clsBtn.style = "z-index:10000;position:fixed;display: inline-block;right:0px;top:0px;float:right;height:32px;width:32px;transition:background-color 0.2s;"
+        clsBtn.className = "barBtn"
+        clsBtn.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDI0IDI0IiBoZWlnaHQ9IjQ4cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjQ4cHgiIGZpbGw9IiMwMDAwMDAiPjxyZWN0IGZpbGw9Im5vbmUiIGhlaWdodD0iMjQiIHdpZHRoPSIyNCIvPjxwYXRoIGQ9Ik0yMiwzLjQxbC01LjI5LDUuMjlMMjAsMTJoLThWNGwzLjI5LDMuMjlMMjAuNTksMkwyMiwzLjQxeiBNMy40MSwyMmw1LjI5LTUuMjlMMTIsMjB2LThINGwzLjI5LDMuMjlMMiwyMC41OUwzLjQxLDIyeiIvPjwvc3ZnPg==";
+        document.body.appendChild(clsBtn);
+        searchFrame.addEventListener("load", async () => { await sleep(150); searchFrame.style.padding = "0px"; });
+        clsBtn.onclick = () => {
+            document.body.removeChild(searchFrame);
+            document.body.removeChild(clsBtn);
+        }
+    };
     //主站检测
     if (document.location.host == "www.xuexi.cn" || document.location.host == "preview-pdf.xuexi.cn") {
         console.log("JS Loaded,Sleep 3 Sec-Qinlili");
@@ -689,13 +706,13 @@
                 console.log("Open DL Page-Qinlili");
                 var searchParams = new URLSearchParams(document.location.search);
                 var dlurl = "https://boot-source.xuexi.cn/newmoocdown?id=" + searchParams.get("id");
-                window.open(dlurl, "_blank");
+                openFrame(dlurl);
             }
             function AudioDL() {
                 console.log("Open DL Page-Qinlili");
                 var searchParams = new URLSearchParams(document.location.search);
                 var dlurl = "https://boot-source.xuexi.cn/audiodown?id=" + searchParams.get("id");
-                window.open(dlurl, "_blank");
+                openFrame(dlurl);
             }
             async function PDFDL() {
                 //webp压缩用处和顶碗人一样大，所以换成灰度压缩
